@@ -7,9 +7,9 @@ const startingBoard = arrayGenerator(4)
 
 
 const exampleBoard = [
-  ['O','O','X'],
-  ['','X','X'],
-  ['O','O',''],
+  ['B','B','B'],
+  ['','W','B'],
+  ['B','W',''],
 ]
 
 type WinState = {
@@ -20,15 +20,13 @@ type WinState = {
 type BoardType = string[][]
 
 
-const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, xIsNext: boolean) => {
-  const newBoard = structuredClone(board)
-  let newChar = ""
-  
+const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNext: boolean) => {
+  const newBoard = structuredClone(board)  
   if (board[rowNum][colNum] != ""){
     console.log("ERROR: getUpdatedBoard attempted on occupied tile.")
   }
  
-  newBoard[rowNum][colNum] = (xIsNext) ? "X" : "O"
+  newBoard[rowNum][colNum] = (bIsNext) ? "B" : "W"
   return newBoard
 }
 
@@ -84,14 +82,11 @@ const getDiagonal = (board: typeof exampleBoard, startingPoint: "nw" | "ne") => 
   else console.log("ERROR: irregular diagonal startPoint value passed")
 }
 
-// export const checkWinCondition = (b: typeof board) : WinState => {
-
-
-export const checkWinCondition = (b: typeof exampleBoard) : WinState => {
+export const checkWinCondition = (board: typeof exampleBoard) : WinState => {
   
   // Check the Rows
   for (let rowIndex = 0; rowIndex < 3; rowIndex++ ) {
-    const rowWinCondition = checkRow(b[rowIndex])
+    const rowWinCondition = checkRow(board[rowIndex])
 
   if (!!rowWinCondition.outcome) {
     return rowWinCondition
@@ -100,7 +95,7 @@ export const checkWinCondition = (b: typeof exampleBoard) : WinState => {
 
   // Check the Columns
   for (let colIndex = 0; colIndex < 3; colIndex++ ) {
-    const colWinCondition = checkRow(getCol(b,colIndex))
+    const colWinCondition = checkRow(getCol(board,colIndex))
     // getCol turns a column into an array, so it can be handled just like a Row
 
   if (!!colWinCondition.outcome) {
@@ -109,21 +104,21 @@ export const checkWinCondition = (b: typeof exampleBoard) : WinState => {
   }
 
   // Check the Diagonals
-  const diagCheck1 = checkRow(getDiagonal(b, "nw"))
+  const diagCheck1 = checkRow(getDiagonal(board, "nw"))
   if (!!diagCheck1.outcome) {
     return diagCheck1
     }
 
-  const diagCheck2 = checkRow(getDiagonal(b, "ne"))
+  const diagCheck2 = checkRow(getDiagonal(board, "ne"))
   if (!!diagCheck2.outcome) {
     return diagCheck2
     }
     
-  const moveCount = b.toString().replace(/,/g,'').length
+  const moveCount = board.toString().replace(/,/g,'').length
   // without the /g global modifier this replace function will default to
   // only swapping out the first instance of the character
 
-  const boardSize = b.length * b.length
+  const boardSize = board.length * board.length
   // square boards only
 
   if (moveCount >= boardSize) {
@@ -138,13 +133,13 @@ export const checkWinCondition = (b: typeof exampleBoard) : WinState => {
 
 //// STYLING USED IN NextPlayerMessage AND ShowTile //// 
 
-const xClass = "text-green-500"
-const oClass = "text-purple-500"
+const bClass = "text-black-800"
+const wClass = "text-stone-100"
 
-const NextPlayerMessage = ({ xIsNext } : { xIsNext: boolean }) => {
+const NextPlayerMessage = ({ bIsNext: bIsNext } : { bIsNext: boolean }) => {
 
-  const nextChar = (xIsNext) ? "x" : "o"
-  let className = (xIsNext) ? xClass : oClass
+  const nextPlayer = (bIsNext) ? "Black" : "White"
+  let className = (bIsNext) ? bClass : wClass
   className = className + " text-2xl font-bold"
   return(
     <div>
@@ -152,34 +147,34 @@ const NextPlayerMessage = ({ xIsNext } : { xIsNext: boolean }) => {
         Next move is:
       </div>
       <div className = {className}>
-        {nextChar.toUpperCase()}
+        {nextPlayer}
       </div>
     </div>
 )
 }
 
-const ShowTile = ({rowNum, colNum, board, setBoard, xIsNext, setXIsNext }: {rowNum: number, colNum: number, board: BoardType, setBoard: Function, xIsNext: boolean, setXIsNext: Function}) => {
+const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext }: {rowNum: number, colNum: number, board: BoardType, setBoard: Function, bIsNext: boolean, setBIsNext: Function}) => {
 
-  const sharedClassName = "flex flex-col text-green-500 bg-gray-100 w-10 h-10 rounded-sm m-1 p-2"
-  const nullClass = "text-gray-200 cursor-pointer"
+  const sharedClassName = "flex flex-col bg-orange-200 w-10 h-10 rounded-sm m-1 p-2 font-bold"
+  const nullClass = "text-gray-500 cursor-pointer"
 
   const makeMove = () => {
-    setBoard(getUpdatedBoard(board, rowNum, colNum, xIsNext))
-    setXIsNext(!xIsNext)
+    setBoard(getUpdatedBoard(board, rowNum, colNum, bIsNext))
+    setBIsNext(!bIsNext)
   }
 
 
-  if (board[rowNum][colNum] ==="X") {
+  if (board[rowNum][colNum] ==="B") {
     return(
-      <div className = {sharedClassName + " " + xClass}>
-        X
+      <div className = {sharedClassName + " " + bClass}>
+        B
       </div>
     )
   }
-  if (board[rowNum][colNum] ==="O") {
+  if (board[rowNum][colNum] ==="W") {
     return(
-      <div className = {sharedClassName + " " + oClass}>
-        O
+      <div className = {sharedClassName + " " + wClass}>
+        W
       </div>
     )
   }
@@ -192,7 +187,7 @@ const ShowTile = ({rowNum, colNum, board, setBoard, xIsNext, setXIsNext }: {rowN
   )
 }
 
-const ShowBoard = ({ board, setBoard, xIsNext, setXIsNext } : { board: BoardType, setBoard: Function, xIsNext: boolean, setXIsNext: Function} ) => {
+const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType, setBoard: Function, bIsNext: boolean, setBIsNext: Function} ) => {
 
   const sharedRowClassName = 'flex'
 
@@ -214,8 +209,8 @@ const ShowBoard = ({ board, setBoard, xIsNext, setXIsNext } : { board: BoardType
             colNum={indexAndColNum} 
             board={board} 
             setBoard={setBoard} 
-            xIsNext={xIsNext} 
-            setXIsNext={setXIsNext} />
+            bIsNext={bIsNext} 
+            setBIsNext={setBIsNext} />
           </>
         )
         )} */}
@@ -237,8 +232,8 @@ const ShowBoard = ({ board, setBoard, xIsNext, setXIsNext } : { board: BoardType
               colNum={indexAndColNum} 
               board={board} 
               setBoard={setBoard} 
-              xIsNext={xIsNext} 
-              setXIsNext={setXIsNext} />
+              bIsNext={bIsNext} 
+              setBIsNext={setBIsNext} />
       )}
       </div>
 
@@ -250,8 +245,8 @@ const ShowBoard = ({ board, setBoard, xIsNext, setXIsNext } : { board: BoardType
               colNum={indexAndColNum} 
               board={board} 
               setBoard={setBoard} 
-              xIsNext={xIsNext} 
-              setXIsNext={setXIsNext} />
+              bIsNext={bIsNext} 
+              setBIsNext={setBIsNext} />
       )}
       </div>
 
@@ -263,40 +258,20 @@ const ShowBoard = ({ board, setBoard, xIsNext, setXIsNext } : { board: BoardType
               colNum={indexAndColNum} 
               board={board} 
               setBoard={setBoard} 
-              xIsNext={xIsNext} 
-              setXIsNext={setXIsNext} />
+              bIsNext={bIsNext} 
+              setBIsNext={setBIsNext} />
       )}
       </div>
-{/* 
-      <div className={sharedRowClassName}>
-      <ShowTile rowNum={0} colNum={0} board={board} setBoard={setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext} />
-      <ShowTile rowNum={0} colNum={1} board={board} setBoard={setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext} />
-      <ShowTile rowNum={0} colNum={2} board={board} setBoard={setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext} />
-
-    </div>
-
-    <div className={sharedRowClassName}>
-      <ShowTile rowNum={1} colNum={0} board={board} setBoard={setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext} />
-      <ShowTile rowNum={1} colNum={1} board={board} setBoard={setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext} />
-      <ShowTile rowNum={1} colNum={2} board={board} setBoard={setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext} />
-
-    </div>
-
-    <div className={sharedRowClassName}>
-      <ShowTile rowNum={2} colNum={0} board={board} setBoard={setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext} />
-      <ShowTile rowNum={2} colNum={1} board={board} setBoard={setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext} />
-      <ShowTile rowNum={2} colNum={2} board={board} setBoard={setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext} />
-    </div> */}
     </>
   )
 
 }
 
-const RefreshButton = ({ setBoard, setXIsNext } : { setBoard: Function, setXIsNext: Function }) => {
+const RefreshButton = ({ setBoard, setBIsNext } : { setBoard: Function, setBIsNext: Function }) => {
   
   const refreshBoard = () => {
     setBoard(startingBoard);
-    setXIsNext(true)
+    setBIsNext(true)
   }
 
   return(
@@ -332,18 +307,18 @@ function App() {
   console.log("==== APP REFRESH ====")
   const [board, setBoard] = useState(structuredClone(startingBoard))
 
-  const [xIsNext, setXIsNext] = useState(true)
+  const [bIsNext, setBIsNext] = useState(true)
 
   const currentWinState = checkWinCondition(board)
 
   return (
     <>
-      <NextPlayerMessage xIsNext={xIsNext} />
+      <NextPlayerMessage bIsNext={bIsNext} />
       <br />
 
-      <ShowBoard  board={board} setBoard= {setBoard} xIsNext={xIsNext} setXIsNext={setXIsNext}/>
+      <ShowBoard  board={board} setBoard= {setBoard} bIsNext={bIsNext} setBIsNext={setBIsNext}/>
 
-      <RefreshButton setBoard = {setBoard} setXIsNext = {setXIsNext} />
+      <RefreshButton setBoard = {setBoard} setBIsNext = {setBIsNext} />
 
       <ShowResults outcome={currentWinState.outcome} winner={currentWinState.winner} />
     </>

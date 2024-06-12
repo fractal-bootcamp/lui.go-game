@@ -3,7 +3,7 @@ import { useState } from 'react'
 import './App.css'
 import { arrayGenerator } from './components/ArrayGenerator';
 
-const startingBoard = arrayGenerator(4)
+const startingBoard = arrayGenerator(13)
 
 
 const exampleBoard = [
@@ -133,13 +133,16 @@ export const checkWinCondition = (board: typeof exampleBoard) : WinState => {
 
 //// STYLING USED IN NextPlayerMessage AND ShowTile //// 
 
-const bClass = "text-black-800"
-const wClass = "text-stone-100"
+const blackTextClass = "text-black-800"
+const blackStoneClass = "bg-zinc-600 rounded-full"
+
+const whiteTextClass = "text-stone-300"
+const whiteStoneClass = "bg-stone-100 rounded-full"
 
 const NextPlayerMessage = ({ bIsNext: bIsNext } : { bIsNext: boolean }) => {
 
   const nextPlayer = (bIsNext) ? "Black" : "White"
-  let className = (bIsNext) ? bClass : wClass
+  let className = (bIsNext) ? blackTextClass : whiteTextClass
   className = className + " text-2xl font-bold"
   return(
     <div>
@@ -166,15 +169,19 @@ const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext }: {rowN
 
   if (board[rowNum][colNum] ==="B") {
     return(
-      <div className = {sharedClassName + " " + bClass}>
-        B
+      <div className = {sharedClassName + " " + blackTextClass}>
+        <div className={blackStoneClass}>
+          B
+        </div>
       </div>
     )
   }
   if (board[rowNum][colNum] ==="W") {
     return(
-      <div className = {sharedClassName + " " + wClass}>
-        W
+      <div className = {sharedClassName + " " + whiteTextClass}>
+        <div className={whiteStoneClass}>
+          W
+        </div>
       </div>
     )
   }
@@ -199,69 +206,27 @@ const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType
 
   return (
     <>
-    {/* <div className={sharedRowClassName}>
-      {board.map((nestedArray, indexAndRowNum) => nestedArray.map(
-        (element, indexAndColNum) => 
-          <>
-          <div className={sharedRowClassName}>
-          <ShowTile 
-            rowNum={indexAndRowNum} 
-            colNum={indexAndColNum} 
-            board={board} 
-            setBoard={setBoard} 
-            bIsNext={bIsNext} 
-            setBIsNext={setBIsNext} />
-          </>
-        )
-        )} */}
-      {/* {
-        board.map(
-          (rowArray) => {() +
-            rowArray.map((cellValue) => <div> cellValue</div>)}
-        
-      } */}
-      <br />
-      {/* {board[0].map(ShowTile(move=index, rowNum=0,colNum=index, board=board, setBoard=setBoard))} */}
-
-
-      <div className={sharedRowClassName}>
-      {board[0].map(
-          (element, indexAndColNum) => 
-            <ShowTile 
-              rowNum={0} 
-              colNum={indexAndColNum} 
-              board={board} 
-              setBoard={setBoard} 
-              bIsNext={bIsNext} 
-              setBIsNext={setBIsNext} />
+      {board.map(
+        (rowArray, rowIndex) => {
+          console.log("heyy")
+          return(
+              <div className={sharedRowClassName}>
+              {rowArray.map(
+                  (cell, colIndex) => 
+                    <ShowTile 
+                      rowNum={rowIndex} 
+                      colNum={colIndex} 
+                      board={board} 
+                      setBoard={setBoard} 
+                      bIsNext={bIsNext} 
+                      setBIsNext={setBIsNext} />
+              )}
+            </div>
+          )
+        }
       )}
-      </div>
 
-      <div className={sharedRowClassName}>
-      {board[0].map(
-          (element, indexAndColNum) => 
-            <ShowTile 
-              rowNum={1} 
-              colNum={indexAndColNum} 
-              board={board} 
-              setBoard={setBoard} 
-              bIsNext={bIsNext} 
-              setBIsNext={setBIsNext} />
-      )}
-      </div>
 
-      <div className={sharedRowClassName}>
-      {board[0].map(
-          (element, indexAndColNum) => 
-            <ShowTile 
-              rowNum={2} 
-              colNum={indexAndColNum} 
-              board={board} 
-              setBoard={setBoard} 
-              bIsNext={bIsNext} 
-              setBIsNext={setBIsNext} />
-      )}
-      </div>
     </>
   )
 

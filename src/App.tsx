@@ -5,13 +5,6 @@ import { arrayGenerator } from './components/ArrayGenerator';
 
 const startingBoard = arrayGenerator(13)
 
-
-const exampleBoard = [
-  ['B','B','B'],
-  ['','W','B'],
-  ['B','W',''],
-]
-
 type WinState = {
   outcome: "WIN" | "TIE" | null;
   winner: "B" | "W" | null;
@@ -30,89 +23,16 @@ const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNe
   return newBoard
 }
 
-const checkRow = (row: string[]) => {
-  const winner = row.reduce((prev: string | null, curr: string) => {
-    if (prev === "") {
-      return null
-    }
-    if (prev === curr) {
-      return curr
-    }
-    return null
-  }
-)
-// array.reduce(previous, current) will cycle through
-// all the items in an array and run the function against
-//
-return {outcome: !!winner ? "WIN" : null,  winner: winner}
-// !! checks if something exists
-// ? is ternary operator, gives first result if True, second if False
-
-}
-
-
-const getCol = (board: typeof exampleBoard, colIndex: number) => {
-  const colArray = []
-
-  for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
-    colArray.push(board[rowIndex][colIndex])
-  }
-  return colArray
-
-}
-
-const getDiagonal = (board: typeof exampleBoard, startingPoint: "nw" | "ne") => {
-  
-  if (startingPoint === "nw"){
-    const diagonalArray = []
-    for (let i = 0; i < board.length; i++) {
-      diagonalArray.push(board[i][i])
-    }
-    return diagonalArray
-  }
-
-  else if (startingPoint === "ne") {
-    const diagonalArray = []
-    for (let i = 0; i < board.length; i++) {
-      // desired coords here are [2][0] ... [1][1] ... [0][2]
-      diagonalArray.push(board[board.length -1 - i][i])
-    }
-    return diagonalArray
-  }
-  else console.log("ERROR: irregular diagonal startPoint value passed")
-}
 
 export const checkWinCondition = (board: typeof exampleBoard) : WinState => {
   
-  // Check the Rows
-  for (let rowIndex = 0; rowIndex < 3; rowIndex++ ) {
-    const rowWinCondition = checkRow(board[rowIndex])
-
-  if (!!rowWinCondition.outcome) {
-    return rowWinCondition
-  }
-  }
-
-  // Check the Columns
-  for (let colIndex = 0; colIndex < 3; colIndex++ ) {
-    const colWinCondition = checkRow(getCol(board,colIndex))
-    // getCol turns a column into an array, so it can be handled just like a Row
-
-  if (!!colWinCondition.outcome) {
-    return colWinCondition
-  }
-  }
-
-  // Check the Diagonals
-  const diagCheck1 = checkRow(getDiagonal(board, "nw"))
-  if (!!diagCheck1.outcome) {
-    return diagCheck1
-    }
-
-  const diagCheck2 = checkRow(getDiagonal(board, "ne"))
-  if (!!diagCheck2.outcome) {
-    return diagCheck2
-    }
+  // Enter Win Conditions here
+  // 
+  // 
+  // 
+  // 
+  // 
+  // return a WinCondition
     
   const moveCount = board.toString().replace(/,/g,'').length
   // without the /g global modifier this replace function will default to
@@ -126,9 +46,6 @@ export const checkWinCondition = (board: typeof exampleBoard) : WinState => {
   }
 
   return {outcome: null, winner: null}
-  // win, tie, loss, or neither
-  // if win, who won (X/O/null)
-
 }
 
 //// STYLING USED IN NextPlayerMessage AND ShowTile //// 
@@ -165,7 +82,6 @@ const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext }: {rowN
     setBoard(getUpdatedBoard(board, rowNum, colNum, bIsNext))
     setBIsNext(!bIsNext)
   }
-
 
   if (board[rowNum][colNum] ==="B") {
     return(

@@ -1,14 +1,10 @@
 import { useState } from 'react'
 
 import './App.css'
+import { arrayGenerator } from './components/ArrayGenerator';
 
-// const player = {}
+const startingBoard = arrayGenerator(4)
 
-const startingBoard = [
-  ['','',''],
-  ['','',''],
-  ['','',''],
-]
 
 const exampleBoard = [
   ['O','O','X'],
@@ -18,7 +14,7 @@ const exampleBoard = [
 
 type WinState = {
   outcome: "WIN" | "TIE" | null;
-  winner: "X" | "O" | null;
+  winner: "B" | "W" | null;
 }
 
 type BoardType = string[][]

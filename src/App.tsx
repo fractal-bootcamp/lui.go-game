@@ -6,8 +6,9 @@ import { arrayGenerator } from './components/ArrayGenerator';
 const startingBoard = arrayGenerator(9)
 
 const blackLetter = "B"
-
 const whiteLetter = "W"
+const outsideLetter = "X"
+const libertyLetter = "L"
 
 type WinState = {
   outcome: string | null;
@@ -15,7 +16,6 @@ type WinState = {
 }
 
 type BoardType = string[][]
-
 
 const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNext: boolean) => {
   const newBoard = structuredClone(board)  
@@ -27,19 +27,46 @@ const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNe
   return newBoard
 }
 
+const checkCell = (board: BoardType, rowNumber: number, colNumber: number) : string => {
+  if (
+    rowNumber < 0 || colNumber < 0 || rowNumber >= board.length || colNumber >= board.length
+  )
+  {
+    return(
+      outsideLetter
+    )
+  }
+  else {
+    const cell = board[rowNumber][colNumber]
+    if (cell === ""){
+      return libertyLetter
+    }
+    else return cell
+  }
+}
+
+checkCell(startingBoard, 10, 1)
+
 const checkForCaptures = (board: BoardType): BoardType => {
+
+  // i refers to rowNumber, j refers to colNumber
+  const newBoard = structuredClone(board)
 
   for (let i=0; i<board.length; i++){
     for (let j=0; j<board.length; j++){
-      if (
-        board[i][j] === whiteLetter
-      )
-      {console.log(i,j,board[i][j])}
+      const north = checkCell( board, i-1, j )
+      const south = checkCell( board, i+1, j )
+      const west = checkCell( board, i, j-1 )
+      const east = checkCell( board, i, j+1 )
+      const combined = north + south + east + west
+
+      if (!combined.includes(libertyLetter)){
+        newBoard[i][j] = ""
+        // Add in some kind of count of captured pieces here as well
+      }
     }
   }
-
-
-  return(board)
+  return(newBoard)
 }
 
 
@@ -218,12 +245,17 @@ const ShowResults = ( {outcome, winner} : {outcome: string | null, winner: strin
 function App() {
   console.log("==== APP REFRESH ====")
   const [board, setBoard] = useState(structuredClone(startingBoard))
-
   const [bIsNext, setBIsNext] = useState(true)
 
   const currentWinState = checkWinCondition(board)
 
-  checkForCaptures(board)
+  const newBoard = checkForCaptures(board)
+  if(
+    JSON.stringify(board) != JSON.stringify(newBoard)
+  ){
+    console.log("not the same")
+    setBoard(newBoard)
+  }
 
   return (
     <>

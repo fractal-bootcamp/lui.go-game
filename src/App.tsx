@@ -3,11 +3,15 @@ import { useState } from 'react'
 import './App.css'
 import { arrayGenerator } from './components/ArrayGenerator';
 
-const startingBoard = arrayGenerator(13)
+const startingBoard = arrayGenerator(9)
+
+const blackLetter = "B"
+
+const whiteLetter = "W"
 
 type WinState = {
-  outcome: "WIN" | "TIE" | null;
-  winner: "B" | "W" | null;
+  outcome: string | null;
+  winner: string | null;
 }
 
 type BoardType = string[][]
@@ -19,12 +23,46 @@ const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNe
     console.log("ERROR: getUpdatedBoard attempted on occupied tile.")
   }
  
-  newBoard[rowNum][colNum] = (bIsNext) ? "B" : "W"
+  newBoard[rowNum][colNum] = (bIsNext) ? blackLetter : whiteLetter
   return newBoard
 }
 
+const checkForCaptures = (board: BoardType): BoardType => {
 
-export const checkWinCondition = (board: typeof exampleBoard) : WinState => {
+  for (let i=0; i<board.length; i++){
+    for (let j=0; j<board.length; j++){
+      if (
+        board[i][j] === whiteLetter
+      )
+      {console.log(i,j,board[i][j])}
+    }
+  }
+
+
+  return(board)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const checkWinCondition = (board: typeof startingBoard) : WinState => {
   
   // Enter Win Conditions here
   // 
@@ -83,20 +121,20 @@ const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext }: {rowN
     setBIsNext(!bIsNext)
   }
 
-  if (board[rowNum][colNum] ==="B") {
+  if (board[rowNum][colNum] === blackLetter) {
     return(
       <div className = {sharedClassName + " " + blackTextClass}>
         <div className={blackStoneClass}>
-          B
+          {blackLetter}
         </div>
       </div>
     )
   }
-  if (board[rowNum][colNum] ==="W") {
+  if (board[rowNum][colNum] === whiteLetter) {
     return(
       <div className = {sharedClassName + " " + whiteTextClass}>
         <div className={whiteStoneClass}>
-          W
+          {whiteLetter}
         </div>
       </div>
     )
@@ -184,6 +222,8 @@ function App() {
   const [bIsNext, setBIsNext] = useState(true)
 
   const currentWinState = checkWinCondition(board)
+
+  checkForCaptures(board)
 
   return (
     <>

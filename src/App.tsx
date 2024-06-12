@@ -114,17 +114,10 @@ const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType
 
   const sharedRowClassName = 'flex'
 
-  const testClick = () => {
-    console.log("testClick")
-    const testThing = setBoard(getUpdatedBoard(board, 2, 2))
-    console.log("testThing", testThing)
-  }
-
   return (
     <>
       {board.map(
         (rowArray, rowIndex) => {
-          console.log("heyy")
           return(
               <div className={sharedRowClassName}>
               {rowArray.map(

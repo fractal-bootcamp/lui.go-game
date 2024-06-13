@@ -540,18 +540,22 @@ const ShowTile = ({
   if (board[rowNum][colNum] === blackLetter) {
     return (
       <div className={sharedClassName + " " + blackTextClass}>
-        <div className={blackStoneClass}>{blackLetter}</div>
+        <div className={blackStoneClass}>&nbsp;
+          {/* {blackLetter} */}
+          </div>
       </div>
     );
   }
   if (board[rowNum][colNum] === whiteLetter) {
     return (
       <div className={sharedClassName + " " + whiteTextClass}>
-        <div className={whiteStoneClass}>{whiteLetter}</div>
+        <div className={whiteStoneClass}>&nbsp;
+          {/* {whiteLetter} */}
+          </div>
       </div>
     );
   } else if (board[rowNum][colNum] === emptyLetter) {
-    const showInfluence = localInfluence != 0;
+    const showInfluence = (localInfluence != 0 && userSettings.showInfluence);
     const tileDisplay = showInfluence ? localInfluence : "";
     return (
       <a onClick={() => makeMove()}>

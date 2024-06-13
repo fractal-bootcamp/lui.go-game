@@ -197,7 +197,7 @@ const NextPlayerMessage = ({ bIsNext } : { bIsNext: boolean }) => {
 )
 }
 
-const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext }: {rowNum: number, colNum: number, board: BoardType, setBoard: Function, bIsNext: boolean, setBIsNext: Function}) => {
+const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext } : {rowNum: number, colNum: number, board: BoardType, setBoard: Function, bIsNext: boolean, setBIsNext: Function}) => {
 
   const sharedClassName = "flex flex-col bg-orange-200 w-10 h-10 rounded-sm m-1 p-2 font-bold"
   const nullClass = "text-gray-500 cursor-pointer"
@@ -233,9 +233,12 @@ const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext }: {rowN
       </div>
       </a>
     )}
-  else return(
+  else {
     console.log("ERROR: Tiles detected with irregular values.")
+    return(
+      <div></div>
   )
+}
 }
 
 const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType, setBoard: Function, bIsNext: boolean, setBIsNext: Function} ) => {
@@ -358,7 +361,7 @@ function App() {
     <>
       <NextPlayerMessage bIsNext={bIsNext} />
 
-      <ShowBoard  board={board} setBoard= {setBoard} bIsNext={bIsNext} setBIsNext={setBIsNext}/>
+      <ShowBoard board={board} setBoard= {setBoard} bIsNext={bIsNext} setBIsNext={setBIsNext}/>
 
       <PassButton bIsNext = {bIsNext} setBIsNext = {setBIsNext} passCount = {passCount} setPassCount = {setPassCount}/>
 

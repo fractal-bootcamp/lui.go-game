@@ -11,7 +11,7 @@ const whiteLetter = whiteString[0]
 const emptyLetter = "E"
 const outsideLetter = "X"
 
-const boardLength = 4
+const boardLength = 6
 const startingBoard = textBoardGenerator(boardLength, emptyLetter)
 const startingShadowBoard = textBoardGenerator(boardLength, "")
 const startingInfluenceBoard = numberBoardGenerator(boardLength, 0)
@@ -187,10 +187,6 @@ const assessInfluenceAcrossBoard = ({ gameBoard, influenceBoard } : { gameBoard:
   // and state of the influenceBoard changes at different levels of recursion
 
 
-  // For the influence values:
-  // BLACK = POSITIVE INTEGERS
-  // WHITE = NEGATIVE INTEGERS
-
   // TBD - do we need to limit this with a recursion count?
 
   const newInfluenceBoard = structuredClone(influenceBoard)
@@ -217,24 +213,37 @@ const assessInfluenceAcrossBoard = ({ gameBoard, influenceBoard } : { gameBoard:
       //   null 
       // }
 
-      // If the tile has a stone on it, assign local, cardinal, inter, super influences
-      if (gameBoard[i][j] === blackLetter){
 
-        // newInfluenceBoard[i][j] += localInfluence
+      // For the influence values:
+      // BLACK = POSITIVE INTEGERS
+      // WHITE = NEGATIVE INTEGERS
+
+      const isPositive = (gameBoard[i][j] === blackLetter)
+      
+      // If the tile has a stone on it, assign local, cardinal, inter, super influences
+      if (gameBoard[i][j] === blackLetter || gameBoard[i][j] === whiteLetter){
+
+        addToCell(newInfluenceBoard, i , j, localInfluence, isPositive)
 
         // if(validTile(newInfluenceBoard, i+1 , j)){newInfluenceBoard[i+1][j] += cardinalInfluence }
         // if(validTile(newInfluenceBoard, i-1 , j)){newInfluenceBoard[i-1][j] += cardinalInfluence }
         // if(validTile(newInfluenceBoard, i , j+1)){newInfluenceBoard[i][j+1] += cardinalInfluence }
         // if(validTile(newInfluenceBoard, i , j-1)){newInfluenceBoard[i][-1] += cardinalInfluence }
 
-        addToCell(newInfluenceBoard, i+1 , j, cardinalInfluence, true)
-        addToCell(newInfluenceBoard, i-1, j, cardinalInfluence, true)
-        addToCell(newInfluenceBoard, i, j+1, cardinalInfluence, true)
-        addToCell(newInfluenceBoard, i, j-1, cardinalInfluence, true)
+        addToCell(newInfluenceBoard, i+1 , j, cardinalInfluence, isPositive)
+        addToCell(newInfluenceBoard, i-1, j, cardinalInfluence, isPositive)
+        addToCell(newInfluenceBoard, i, j+1, cardinalInfluence, isPositive)
+        addToCell(newInfluenceBoard, i, j-1, cardinalInfluence, isPositive)
 
-        // ADD IN HERE in intercardinal and supercardinal
+        addToCell(newInfluenceBoard, i+1 , j+1, intercardinalInfluence, isPositive)
+        addToCell(newInfluenceBoard, i+1, j-1, intercardinalInfluence, isPositive)
+        addToCell(newInfluenceBoard, i-1, j+1, intercardinalInfluence, isPositive)
+        addToCell(newInfluenceBoard, i-1, j-1, intercardinalInfluence, isPositive)
 
-        // ADD IN HERE support for the white pieces
+        addToCell(newInfluenceBoard, i+2 , j, supercardinalInfluence, isPositive)
+        addToCell(newInfluenceBoard, i-2, j, supercardinalInfluence, isPositive)
+        addToCell(newInfluenceBoard, i, j+2, supercardinalInfluence, isPositive)
+        addToCell(newInfluenceBoard, i, j-2, supercardinalInfluence, isPositive)
       }
 
       // If an empty tile is as strongly influenced as if it had a stone

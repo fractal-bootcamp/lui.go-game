@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import './App.css'
-import { arrayGenerator } from './components/ArrayGenerator';
+import { numberBoardGenerator, textBoardGenerator } from './components/ArrayGenerator';
 
 const blackString = "Black"
 const whiteString = "White"
@@ -11,14 +11,15 @@ const whiteLetter = whiteString[0]
 const emptyLetter = "E"
 const outsideLetter = "X"
 
-const boardLength = 9
-const startingBoard = arrayGenerator(boardLength, emptyLetter)
-const startingShadowBoard = arrayGenerator(boardLength, "")
-const startingInfluenceBoard = arrayGenerator(boardLength, 0)
+const boardLength = 4
+const startingBoard = textBoardGenerator(boardLength, emptyLetter)
+const startingShadowBoard = textBoardGenerator(boardLength, "")
+const startingInfluenceBoard = numberBoardGenerator(boardLength, 0)
 
-type BoardType = string[][]
+type TextBoard = string[][]
+type NumberBoard = number[][]
 
-const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNext: boolean) : BoardType => {
+const getUpdatedBoard = (board: TextBoard, rowNum: number, colNum: number, bIsNext: boolean) : TextBoard => {
   // This takes in a game board state and a move
   // and returns an updated board with that move incorporated
   const newBoard = structuredClone(board)  
@@ -29,7 +30,7 @@ const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNe
   return newBoard
 }
 
-const checkCell = (board: BoardType, rowNumber: number, colNumber: number) : string => {
+const checkCell = (board: TextBoard, rowNumber: number, colNumber: number) : string => {
   // Lets you check a cell on a board without worrying about
   // whether your coordinates are out of bounds
   if (
@@ -41,7 +42,38 @@ const checkCell = (board: BoardType, rowNumber: number, colNumber: number) : str
   else return board[rowNumber][colNumber]
 }
 
-const neighbourString = (board: BoardType, i: number, j: number) =>{
+
+// This approach does NOT work
+// Need to either return a board, or just use a function like this to confirm that a tile is valid
+const addToCell = (board: number[][], rowNumber: number, colNumber: number, operand: number, isPositive: boolean ) : void => {
+  // Lets you add number to a number[][] board without worrying about
+  // whether your coordinates are out of bounds
+  if (
+    rowNumber < 0 || colNumber < 0 || rowNumber >= board.length || colNumber >= board.length
+  )
+  {
+    console.log("Yup")
+  }
+  else {
+    if (isPositive) {
+      board[rowNumber][colNumber] += operand
+    }
+    else {
+      board[rowNumber][colNumber] -= operand
+    }
+    
+  }
+
+}
+
+const validTile = (board: number[][] | string[][], rowNumber: number, colNumber: number ) : boolean => {
+  if (
+    rowNumber < 0 || colNumber < 0 || rowNumber >= board.length || colNumber >= board.length
+  ){return false}
+  else return true
+}
+
+const neighbourString = (board: TextBoard, i: number, j: number) =>{
   // Returns a string of the pieces occupying four neighbouring spaces
   // i is rowNumber, j is colNumber
   const north = checkCell( board, i-1, j )
@@ -53,7 +85,7 @@ const neighbourString = (board: BoardType, i: number, j: number) =>{
   }
 
 
-const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard, focusOnBlack } : {gameBoard: BoardType, shadowBoard: BoardType, focusOnBlack: boolean}): BoardType => {
+const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard, focusOnBlack } : {gameBoard: TextBoard, shadowBoard: TextBoard, focusOnBlack: boolean}): TextBoard => {
   
   // After Black moves, we assess White's stones first, and then assess Black's (to assess for suicides)
   // So each time we run this function we focus on a single Player
@@ -127,7 +159,7 @@ const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard, focusOnBlack } : {ga
   else return newShadowBoard
 }
 
-const removeCapturedStones = ({ gameBoard, shadowBoard } : {gameBoard: BoardType, shadowBoard: BoardType}): BoardType => {
+const removeCapturedStones = ({ gameBoard, shadowBoard } : {gameBoard: TextBoard, shadowBoard: TextBoard}): TextBoard => {
   const newGameBoard = structuredClone(gameBoard)
 
   for (let i=0; i<gameBoard.length; i++){
@@ -148,7 +180,7 @@ const removeCapturedStones = ({ gameBoard, shadowBoard } : {gameBoard: BoardType
 
 
 
-const assessInfluenceAcrossBoard = ({ gameBoard, influenceBoard } : { gameBoard: BoardType, influenceBoard: number[][] }): number[][] => {
+const assessInfluenceAcrossBoard = ({ gameBoard, influenceBoard } : { gameBoard: TextBoard, influenceBoard: NumberBoard }): NumberBoard => {
   
   // We assess influence without reference to whose go it is
   // Function must take in both the gameBoard and the influenceBoard because it is recursive
@@ -167,7 +199,7 @@ const assessInfluenceAcrossBoard = ({ gameBoard, influenceBoard } : { gameBoard:
 
   const maxInfluence = 10
 
-  const localInfluence = 5
+  const localInfluence = 4
   const cardinalInfluence = 2
   const intercardinalInfluence = 1
   const supercardinalInfluence = 1
@@ -181,68 +213,58 @@ const assessInfluenceAcrossBoard = ({ gameBoard, influenceBoard } : { gameBoard:
     for (let j=0; j<gameBoard.length; j++){
 
       // Skip anything that has already hit a maximum influence
-      if (Math.abs(newInfluenceBoard[i][j]) >= maxInfluence){
-        null 
+      // if (Math.abs(newInfluenceBoard[i][j]) >= maxInfluence){
+      //   null 
+      // }
+
+      // If the tile has a stone on it, assign local, cardinal, inter, super influences
+      if (gameBoard[i][j] === blackLetter){
+
+        // newInfluenceBoard[i][j] += localInfluence
+
+        // if(validTile(newInfluenceBoard, i+1 , j)){newInfluenceBoard[i+1][j] += cardinalInfluence }
+        // if(validTile(newInfluenceBoard, i-1 , j)){newInfluenceBoard[i-1][j] += cardinalInfluence }
+        // if(validTile(newInfluenceBoard, i , j+1)){newInfluenceBoard[i][j+1] += cardinalInfluence }
+        // if(validTile(newInfluenceBoard, i , j-1)){newInfluenceBoard[i][-1] += cardinalInfluence }
+
+        addToCell(newInfluenceBoard, i+1 , j, cardinalInfluence, true)
+        addToCell(newInfluenceBoard, i-1, j, cardinalInfluence, true)
+        addToCell(newInfluenceBoard, i, j+1, cardinalInfluence, true)
+        addToCell(newInfluenceBoard, i, j-1, cardinalInfluence, true)
+
+        // ADD IN HERE in intercardinal and supercardinal
+
+        // ADD IN HERE support for the white pieces
       }
 
-      // If the tile has a stone on it, assign local/cardinal/inter/super influence
-      
-
-      //
-      //
-      //
-      //
-      // Any empty squares effectively have Liberty
-      else if (gameBoard[i][j] == emptyLetter){
-        newShadowBoard[i][j] = "hasLiberty"
-      }
-
-      // Every time we run this function one player is treated as "Safe"
-      // Let's just pretend here their pieces enjoy liberty
-      else if (gameBoard[i][j] == safeLetter){
-        newShadowBoard[i][j] = "hasLiberty"
-      }
-
-      // For non-empty spaces, we want to know what lives in the neighouring spaces
-      else {
-        const neighbours = neighbourString(gameBoard, i, j)
-
-        // If one of those spaces is empty, you have Liberty
-        if (neighbours.includes(emptyLetter)) {
-          newShadowBoard[i][j] = "hasLiberty"
-        }
-
-        // If you're the most recently placed stone
-        // If one of those spaces is non-empty, we have two conditions to gain Liberty.
-        // Neighbouring space must:
-        // 1 - Be of the same colour
-        // 2 - Have Liberty
-
-        // Let's check North
-        else if ( checkCell(gameBoard, i-1, j) === gameBoard[i][j] && checkCell (newShadowBoard, i-1, j) === "hasLiberty") {
-          newShadowBoard[i][j] = "hasLiberty"
-        }
-        // Let's check South
-        else if ( checkCell(gameBoard, i+1, j) === gameBoard[i][j] && checkCell (newShadowBoard, i+1, j) === "hasLiberty") {
-          newShadowBoard[i][j] = "hasLiberty"
-        }
-        // Let's check West
-        else if ( checkCell(gameBoard, i, j-1) === gameBoard[i][j] && checkCell (newShadowBoard, i, j-1) === "hasLiberty") {
-          newShadowBoard[i][j] = "hasLiberty"
-        }
-        // Let's check East
-        else if ( checkCell(gameBoard, i, j+1) === gameBoard[i][j] && checkCell (newShadowBoard, i, j+1) === "hasLiberty") {
-          newShadowBoard[i][j] = "hasLiberty"
-        }
-      }
+      // If an empty tile is as strongly influenced as if it had a stone
+      // let's give it a soft onward influence
+      // Black first
+      // else if (newInfluenceBoard[i][j] > localInfluence) {
+      //   addToCell(newInfluenceBoard, i+1 , j, supercardinalInfluence, true)
+      //   addToCell(newInfluenceBoard, i-1, j, supercardinalInfluence, true)
+      //   addToCell(newInfluenceBoard, i, j+1, supercardinalInfluence, true)
+      //   addToCell(newInfluenceBoard, i, j-1, supercardinalInfluence, true)
+      // }
+      // // then White
+      // else if (newInfluenceBoard[i][j] < -localInfluence) {
+      //   addToCell(newInfluenceBoard, i+1 , j, supercardinalInfluence, false)
+      //   addToCell(newInfluenceBoard, i-1, j, supercardinalInfluence, false)
+      //   addToCell(newInfluenceBoard, i, j+1, supercardinalInfluence, false)
+      //   addToCell(newInfluenceBoard, i, j-1, supercardinalInfluence, false)
+      // }
     }
   }
-  console.log("Recursive function called: assessLibertyAcrossBoard")
-  if (JSON.stringify(shadowBoard) != JSON.stringify(newShadowBoard)) {
-    const newNewShadowBoard = assessLibertyAcrossBoard({gameBoard : gameBoard, shadowBoard : newShadowBoard, focusOnBlack: focusOnBlack});
-    return newNewShadowBoard
-  }
-  else return newInfluenceBoard
+
+  // console.log("Recursive function called: assessInfluenceAcrossBoard")
+  // if (JSON.stringify(influenceBoard) != JSON.stringify(newInfluenceBoard)) {
+  //   const newNewInfluenceBoard = assessInfluenceAcrossBoard({gameBoard : gameBoard, influenceBoard : newInfluenceBoard});
+  //   return newNewInfluenceBoard
+  // }
+  // else return newInfluenceBoard
+
+  return newInfluenceBoard
+
 }
 
 
@@ -324,7 +346,7 @@ const NextPlayerMessage = ({ bIsNext } : { bIsNext: boolean }) => {
 )
 }
 
-const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext } : {rowNum: number, colNum: number, board: BoardType, setBoard: Function, bIsNext: boolean, setBIsNext: Function}) => {
+const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext, influence } : {rowNum: number, colNum: number, board: TextBoard, setBoard: Function, bIsNext: boolean, setBIsNext: Function, influence: NumberBoard}) => {
 
   const sharedClassName = "flex flex-col bg-orange-200 w-10 h-10 rounded-sm m-1 p-2 font-bold"
   const nullClass = "text-gray-500 cursor-pointer"
@@ -353,10 +375,13 @@ const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext } : {row
     )
   }
   else if (board[rowNum][colNum] === emptyLetter) {
+    const localInfluence = influence[rowNum][colNum]
+    const showInfluence = (localInfluence != 0)
+    const tileDisplay = (showInfluence) ? localInfluence : ""
     return (
       <a onClick={() => makeMove()}>
       <div className = {sharedClassName + " " + nullClass}>
-        
+        {tileDisplay}
       </div>
       </a>
     )}
@@ -368,7 +393,7 @@ const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext } : {row
 }
 }
 
-const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType, setBoard: Function, bIsNext: boolean, setBIsNext: Function} ) => {
+const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext, influence } : { board: TextBoard, setBoard: Function, bIsNext: boolean, setBIsNext: Function, influence: NumberBoard} ) => {
 
   const sharedRowClassName = 'flex'
 
@@ -387,7 +412,9 @@ const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType
                       board={board} 
                       setBoard={setBoard} 
                       bIsNext={bIsNext} 
-                      setBIsNext={setBIsNext} />
+                      setBIsNext={setBIsNext}
+                      influence={influence}
+                       />
               )}
             </div>
           )
@@ -482,12 +509,14 @@ function App() {
     }
   }
 
+  const influence = assessInfluenceAcrossBoard( { gameBoard : board, influenceBoard: startingInfluenceBoard} )
+  console.log(influence)
 
   return (
     <>
       <NextPlayerMessage bIsNext={bIsNext} />
 
-      <ShowBoard board={board} setBoard= {setBoard} bIsNext={bIsNext} setBIsNext={setBIsNext}/>
+      <ShowBoard board={board} setBoard= {setBoard} bIsNext={bIsNext} setBIsNext={setBIsNext} influence={influence} />
 
       <PassButton bIsNext = {bIsNext} setBIsNext = {setBIsNext} passCount = {passCount} setPassCount = {setPassCount}/>
 

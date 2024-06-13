@@ -657,6 +657,16 @@ const RefreshButton = ({
   );
 };
 
+const ShowScore = ({gameScore} : {gameScore: GameScore}) => {
+  return(
+    <div>
+      Black has captured: {gameScore.whiteStonesLostToBlack} stones
+      <br />
+      White has captured: {gameScore.blackStonesLostToWhite} stones
+    </div>
+  )
+}
+
 const ShowResults = ({
   outcome,
   winner,
@@ -681,6 +691,10 @@ type UserSettings = {
   showInfluence: boolean
 }
 
+type GameScore = {
+  blackStonesLostToWhite: number
+  whiteStonesLostToBlack: number
+}
 
 function App() {
   console.log("==== APP REFRESH ====");
@@ -690,6 +704,10 @@ function App() {
   const [userSettings, setUserSettings] = useState<UserSettings>({
     showInfluence: false,
   });
+  const [gameScore, setGameScore] = useState<GameScore>({
+    blackStonesLostToWhite: 0,
+    whiteStonesLostToBlack: 0
+  })
 
   // We don't need to run our heavy algos if a user has just passed
   if (passCount === 0) {
@@ -757,6 +775,7 @@ function App() {
           Show influence
         </span>
       </label>
+      <ShowScore gameScore={gameScore}/>
 
       <ShowBoard
         board={board}

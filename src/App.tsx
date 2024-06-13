@@ -11,11 +11,6 @@ const whiteLetter = "W"
 const outsideLetter = "X"
 const libertyLetter = "L"
 
-type WinState = {
-  outcome: string | null;
-  winner: string | null;
-}
-
 type BoardType = string[][]
 
 const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNext: boolean) => {
@@ -23,7 +18,6 @@ const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNe
   if (board[rowNum][colNum] != ""){
     console.log("ERROR: getUpdatedBoard attempted on occupied tile.")
   }
- 
   newBoard[rowNum][colNum] = (bIsNext) ? blackLetter : whiteLetter
   return newBoard
 }
@@ -46,28 +40,6 @@ const checkCell = (board: BoardType, rowNumber: number, colNumber: number) : str
   }
 }
 
-const checkForCaptures = (board: BoardType): BoardType => {
-
-  // i refers to rowNumber, j refers to colNumber
-  const newBoard = structuredClone(board)
-
-  for (let i=0; i<board.length; i++){
-    for (let j=0; j<board.length; j++){
-      const north = checkCell( board, i-1, j )
-      const south = checkCell( board, i+1, j )
-      const west = checkCell( board, i, j-1 )
-      const east = checkCell( board, i, j+1 )
-      const combined = north + south + east + west
-
-      if (!combined.includes(libertyLetter) && !combined.includes(board[i][j])){
-        newBoard[i][j] = ""
-        // Add in some kind of count of captured pieces here as well
-      }
-    }
-  }
-  return(newBoard)
-}
-
 const neighbourString = (board: BoardType, i: number, j: number) =>{
   // i is rowNumber, j is colNumber
   const north = checkCell( board, i-1, j )
@@ -83,7 +55,7 @@ const startingShadowBoard = structuredClone(startingBoard)
 const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard } : {gameBoard: BoardType, shadowBoard: BoardType}): BoardType => {
   
   // This must take in both the gameBoard and the shadowBoard because it is recursive
-  // and state of the shadowBoard changes at diefferent levels of recursion
+  // and state of the shadowBoard changes at different levels of recursion
 
   const newGameBoard = structuredClone(gameBoard)
   const newShadowBoard = structuredClone(shadowBoard)
@@ -142,17 +114,19 @@ const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard } : {gameBoard: Board
   else return newShadowBoard
 }
 
+const removeCapturedStones = ({ gameBoard, shadowBoard } : {gameBoard: BoardType, shadowBoard: BoardType}): BoardType => {
+  const newGameBoard = structuredClone(gameBoard)
 
+  for (let i=0; i<gameBoard.length; i++){
+    for (let j=0; j<gameBoard.length; j++){
 
+      if(shadowBoard[i][j] == "")
+        {newGameBoard[i][j] = ""}
 
-
-
-
-
-
-
-
-
+    }
+  }
+  return newGameBoard
+}
 
 
 export const checkWinCondition = (board: typeof startingBoard) : WinState => {
@@ -311,21 +285,18 @@ const ShowResults = ( {outcome, winner} : {outcome: string | null, winner: strin
 function App() {
   console.log("==== APP REFRESH ====")
   const [board, setBoard] = useState(structuredClone(startingBoard))
-  // const [shadowBoard, setShadowBoard] = useState(structuredClone(startingShadowBoard))
   const [bIsNext, setBIsNext] = useState(true)
 
-  const testTheShadowBoard = assessLibertyAcrossBoard({gameBoard : board, shadowBoard : startingShadowBoard})
-
-  console.log("state of the shadowboard:", testTheShadowBoard)
+  const freshShadowBoard = assessLibertyAcrossBoard({gameBoard : board, shadowBoard : startingShadowBoard})
+  const freshGameBoard = removeCapturedStones({gameBoard: board, shadowBoard: freshShadowBoard})
 
   const currentWinState = checkWinCondition(board)
 
-  const newBoard = checkForCaptures(board)
   if(
-    JSON.stringify(board) != JSON.stringify(newBoard)
+    JSON.stringify(board) != JSON.stringify(freshGameBoard)
   ){
-    console.log("not the same")
-    setBoard(newBoard)
+    console.log("Stone(s) have been captured.")
+    setBoard(freshGameBoard)
   }
 
   return (
@@ -343,3 +314,17 @@ function App() {
 }
 
 export default App
+
+
+
+// 
+// COMING UP NEXT
+// 
+// Pass button
+// protect the just placed stone (unless it's a suicide)
+// influence version of shadowBoard
+// End of game scoring
+// Ko
+// 
+
+

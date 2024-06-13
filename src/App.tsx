@@ -55,8 +55,14 @@ const neighbourString = (board: BoardType, i: number, j: number) =>{
 
 const startingShadowBoard = structuredClone(startingBoard)
 
-const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard } : {gameBoard: BoardType, shadowBoard: BoardType}): BoardType => {
+const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard, focusOnBlack } : {gameBoard: BoardType, shadowBoard: BoardType, focusOnBlack: boolean}): BoardType => {
   
+  // After Black moves, we assess White's stones first, and then assess Black's (to assess for suicides)
+  // So each time we run this function we focus on a single Player
+  // If we're not focusing on the Player, we treat all their pieces as being safe, i.e. "hasLiberty"
+
+  const safeLetter = (focusOnBlack) ? whiteLetter : blackLetter
+
   // This must take in both the gameBoard and the shadowBoard because it is recursive
   // and state of the shadowBoard changes at different levels of recursion
 
@@ -76,6 +82,12 @@ const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard } : {gameBoard: Board
         newShadowBoard[i][j] = "hasLiberty"
       }
 
+      // Every time we run this function one player is treated as "Safe"
+      // Let's just pretend here their pieces enjoy liberty
+      else if (gameBoard[i][j] == safeLetter){
+        newShadowBoard[i][j] = "hasLiberty"
+      }
+
       // For non-empty spaces, we want to know what lives in the neighouring spaces
       else {
         const neighbours = neighbourString(gameBoard, i, j)
@@ -85,6 +97,7 @@ const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard } : {gameBoard: Board
           newShadowBoard[i][j] = "hasLiberty"
         }
 
+        // If you're the most recently placed stone
         // If one of those spaces is non-empty, we have two conditions to gain Liberty.
         // Neighbouring space must:
         // 1 - Be of the same colour
@@ -111,7 +124,7 @@ const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard } : {gameBoard: Board
   }
   console.log("checkForCapturesBigger has been called and looped.")
   if (JSON.stringify(shadowBoard) != JSON.stringify(newShadowBoard)) {
-    const newNewShadowBoard = assessLibertyAcrossBoard({gameBoard : gameBoard, shadowBoard : newShadowBoard});
+    const newNewShadowBoard = assessLibertyAcrossBoard({gameBoard : gameBoard, shadowBoard : newShadowBoard, focusOnBlack: focusOnBlack});
     return newNewShadowBoard
   }
   else return newShadowBoard
@@ -307,8 +320,25 @@ function App() {
   const [bIsNext, setBIsNext] = useState(true)
   const [passCount, setPassCount] = useState(0)
 
-  const freshShadowBoard = assessLibertyAcrossBoard({gameBoard : board, shadowBoard : startingShadowBoard})
-  const freshGameBoard = removeCapturedStones({gameBoard: board, shadowBoard: freshShadowBoard})
+  // We don't need to run our heavy algos if a user has just passed
+  if (passCount === 0){
+
+    // We run this once where we treat the player who just moved as "Safe"
+    const freshShadowBoard = assessLibertyAcrossBoard({gameBoard : board, shadowBoard : startingShadowBoard, focusOnBlack : bIsNext})
+    const freshGameBoard = removeCapturedStones({gameBoard: board, shadowBoard: freshShadowBoard})
+  
+    // Then we run it again to assess for suicides
+    const freshShadowBoard2 = assessLibertyAcrossBoard({gameBoard : freshGameBoard, shadowBoard : startingShadowBoard, focusOnBlack : !bIsNext})
+    const freshGameBoard2 = removeCapturedStones({gameBoard: freshGameBoard, shadowBoard: freshShadowBoard2})
+
+    if(
+      JSON.stringify(board) != JSON.stringify(freshGameBoard2)
+    ){
+      console.log("Stone(s) have been captured.")
+      setBoard(freshGameBoard2)
+    }
+
+  }
 
   let currentWinState = checkWinCondition(board)
 
@@ -320,12 +350,6 @@ function App() {
     }
   }
 
-  if(
-    JSON.stringify(board) != JSON.stringify(freshGameBoard)
-  ){
-    console.log("Stone(s) have been captured.")
-    setBoard(freshGameBoard)
-  }
 
   return (
     <>
@@ -349,7 +373,6 @@ export default App
 // 
 // COMING UP NEXT
 // 
-// Protect the just placed stone (unless it's a suicide)
 // Influence version of shadowBoard
 // Count captured pieces somewhere
 // End of game scoring

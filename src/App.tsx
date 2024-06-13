@@ -6,8 +6,11 @@ import { arrayGenerator } from './components/ArrayGenerator';
 const boardLength = 9
 const startingBoard = arrayGenerator(boardLength)
 
-const blackLetter = "B"
-const whiteLetter = "W"
+const blackString = "Black"
+const whiteString = "White"
+
+const blackLetter = blackString[0]
+const whiteLetter = whiteString[0]
 const outsideLetter = "X"
 const libertyLetter = "L"
 
@@ -163,7 +166,7 @@ const whiteStoneClass = "bg-stone-100 rounded-full"
 
 const NextPlayerMessage = ({ bIsNext } : { bIsNext: boolean }) => {
 
-  const nextPlayer = (bIsNext) ? "Black" : "White"
+  const nextPlayer = (bIsNext) ? blackString : whiteString
   let className = (bIsNext) ? blackTextClass : whiteTextClass
   className = className + " text-2xl font-bold"
   return(
@@ -248,18 +251,23 @@ const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType
 
 const buttonStyling = 'p-5'
 
-const PassButton = ({ bIsNext , setBIsNext } : { bIsNext: boolean, setBIsNext: Function }) => {
+const PassButton = ({ bIsNext , setBIsNext, passCount, setPassCount } : { bIsNext: boolean, setBIsNext: Function, passCount: number, setPassCount: Function }) => {
+  const onPass = () => {
+    setPassCount(passCount+1);
+    setBIsNext(!bIsNext)
+  }
   return(
     <div className={buttonStyling}>
-      <button onClick={() => setBIsNext(!bIsNext)}>Pass</button>
+      <button onClick={() => onPass()}>Pass</button>
     </div>
 )
 }
-const RefreshButton = ({ setBoard, setBIsNext } : { setBoard: Function, setBIsNext: Function }) => {
+const RefreshButton = ({ setBoard, setBIsNext, setPassCount  } : { setBoard: Function, setBIsNext: Function, setPassCount: Function }) => {
   
   const refreshBoard = () => {
     setBoard(startingBoard);
-    setBIsNext(true)
+    setBIsNext(true);
+    setPassCount(0);
   }
 
   return(
@@ -293,11 +301,20 @@ function App() {
   console.log("==== APP REFRESH ====")
   const [board, setBoard] = useState(structuredClone(startingBoard))
   const [bIsNext, setBIsNext] = useState(true)
+  const [passCount, setPassCount] = useState(0)
 
   const freshShadowBoard = assessLibertyAcrossBoard({gameBoard : board, shadowBoard : startingShadowBoard})
   const freshGameBoard = removeCapturedStones({gameBoard: board, shadowBoard: freshShadowBoard})
 
-  const currentWinState = checkWinCondition(board)
+  let currentWinState = checkWinCondition(board)
+
+  if (passCount > 1){
+    currentWinState = {
+      // dummy date for now
+      outcome: "WIN", 
+      winner: blackString
+    }
+  }
 
   if(
     JSON.stringify(board) != JSON.stringify(freshGameBoard)
@@ -312,9 +329,9 @@ function App() {
 
       <ShowBoard  board={board} setBoard= {setBoard} bIsNext={bIsNext} setBIsNext={setBIsNext}/>
 
-      <PassButton bIsNext = {bIsNext} setBIsNext = {setBIsNext} />
+      <PassButton bIsNext = {bIsNext} setBIsNext = {setBIsNext} passCount = {passCount} setPassCount = {setPassCount}/>
 
-      <RefreshButton setBoard = {setBoard} setBIsNext = {setBIsNext} />
+      <RefreshButton setBoard = {setBoard} setBIsNext = {setBIsNext} setPassCount = {setPassCount}/>
 
       <ShowResults outcome={currentWinState.outcome} winner={currentWinState.winner} />
     </>

@@ -80,8 +80,11 @@ const neighbourString = (board: BoardType, i: number, j: number) =>{
 
 const startingShadowBoard = structuredClone(startingBoard)
 
-const checkForCapturesBigger = ({ gameBoard, shadowBoard } : {gameBoard: BoardType, shadowBoard: BoardType}): BoardType => {
+const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard } : {gameBoard: BoardType, shadowBoard: BoardType}): BoardType => {
   
+  // This must take in both the gameBoard and the shadowBoard because it is recursive
+  // and state of the shadowBoard changes at diefferent levels of recursion
+
   const newGameBoard = structuredClone(gameBoard)
   const newShadowBoard = structuredClone(shadowBoard)
 
@@ -133,21 +136,11 @@ const checkForCapturesBigger = ({ gameBoard, shadowBoard } : {gameBoard: BoardTy
   }
   console.log("checkForCapturesBigger has been called and looped.")
   if (JSON.stringify(shadowBoard) != JSON.stringify(newShadowBoard)) {
-    const newNewShadowBoard = checkForCapturesBigger({gameBoard : gameBoard, shadowBoard : newShadowBoard});
+    const newNewShadowBoard = assessLibertyAcrossBoard({gameBoard : gameBoard, shadowBoard : newShadowBoard});
     return newNewShadowBoard
   }
   else return newShadowBoard
 }
-// checkForCapturesBigger ({ gameBoard: startingBoard, shadowBoard: startingShadowBoard})
-
-// const sampleGroup = {
-//   stoneColour: "black",
-//   hasLiberty: false,
-//   tiles: [
-//     (5,6),
-//     (5,7),
-//     ]
-// }
 
 
 
@@ -321,7 +314,7 @@ function App() {
   // const [shadowBoard, setShadowBoard] = useState(structuredClone(startingShadowBoard))
   const [bIsNext, setBIsNext] = useState(true)
 
-  const testTheShadowBoard = checkForCapturesBigger({gameBoard : board, shadowBoard : startingShadowBoard})
+  const testTheShadowBoard = assessLibertyAcrossBoard({gameBoard : board, shadowBoard : startingShadowBoard})
 
   console.log("state of the shadowboard:", testTheShadowBoard)
 

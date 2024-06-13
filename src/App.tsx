@@ -60,7 +60,7 @@ const checkForCaptures = (board: BoardType): BoardType => {
       const east = checkCell( board, i, j+1 )
       const combined = north + south + east + west
 
-      if (!combined.includes(libertyLetter)){
+      if (!combined.includes(libertyLetter) && !combined.includes(board[i][j])){
         newBoard[i][j] = ""
         // Add in some kind of count of captured pieces here as well
       }

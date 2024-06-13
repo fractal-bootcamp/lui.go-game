@@ -347,8 +347,20 @@ export const checkWinCondition = (board: typeof startingBoard) : WinState => {
 const blackTextClass = "text-black-800"
 const blackStoneClass = "bg-zinc-600 rounded-full"
 
+const blackBGColor = "zinc"
+const blackTileWeakBG = `bg-${blackBGColor}-100`
+const blackTileMediumBG = `bg-${blackBGColor}-200`
+const blackTileStrongBG = `bg-${blackBGColor}-400`
+
 const whiteTextClass = "text-stone-300"
 const whiteStoneClass = "bg-stone-100 rounded-full"
+
+const whiteBGColor = "lime"
+const whiteTileWeakBG = `bg-${whiteBGColor}-100`
+const whiteTileMediumBG = `bg-${whiteBGColor}-200`
+const whiteTileStrongBG = `bg-${whiteBGColor}-400`
+
+const emptyTileBG = 'bg-orange-200'
 
 const NextPlayerMessage = ({ bIsNext } : { bIsNext: boolean }) => {
 
@@ -369,7 +381,33 @@ const NextPlayerMessage = ({ bIsNext } : { bIsNext: boolean }) => {
 
 const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext, influence } : {rowNum: number, colNum: number, board: TextBoard, setBoard: Function, bIsNext: boolean, setBIsNext: Function, influence: NumberBoard}) => {
 
-  const sharedClassName = "flex flex-col bg-orange-200 w-10 h-10 rounded-sm m-1 p-2 font-bold"
+  // We use the influence to choose the background color of the tile
+  let tileBGColor = ""
+  const localInfluence = influence[rowNum][colNum]
+  if (localInfluence === 0)
+    {
+      tileBGColor = emptyTileBG
+    }
+  else if (localInfluence < -4 ){
+    tileBGColor = whiteTileStrongBG
+  }
+  else if (localInfluence < -2 ){
+    tileBGColor = whiteTileMediumBG
+  }
+  else if (localInfluence < 0 ){
+    tileBGColor = whiteTileWeakBG
+  }
+  else if (localInfluence > 4 ){
+    tileBGColor = blackTileStrongBG
+  }
+  else if (localInfluence > 2 ){
+    tileBGColor = blackTileMediumBG
+  }
+  else if (localInfluence > 0 ){
+    tileBGColor = blackTileWeakBG
+  }
+
+  const sharedClassName = `flex flex-col w-10 h-10 rounded-sm m-1 p-2 font-bold ${tileBGColor}`
   const nullClass = "text-gray-500 cursor-pointer"
 
   const makeMove = () => {
@@ -396,7 +434,7 @@ const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext, influen
     )
   }
   else if (board[rowNum][colNum] === emptyLetter) {
-    const localInfluence = influence[rowNum][colNum]
+    
     const showInfluence = (localInfluence != 0)
     const tileDisplay = (showInfluence) ? localInfluence : ""
     return (
@@ -555,8 +593,6 @@ export default App
 // 
 // COMING UP NEXT
 // 
-// Influence version of shadowBoard
-// Show influence in tile colour
 // Count captured pieces somewhere
 // End of game scoring
 // Display captured pieces on sides

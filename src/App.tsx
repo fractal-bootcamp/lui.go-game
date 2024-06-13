@@ -3,22 +3,25 @@ import { useState } from 'react'
 import './App.css'
 import { arrayGenerator } from './components/ArrayGenerator';
 
-const boardLength = 9
-const startingBoard = arrayGenerator(boardLength)
-
 const blackString = "Black"
 const whiteString = "White"
 
 const blackLetter = blackString[0]
 const whiteLetter = whiteString[0]
+const emptyLetter = "E"
 const outsideLetter = "X"
-const libertyLetter = "L"
+
+const boardLength = 9
+const startingBoard = arrayGenerator(boardLength, emptyLetter)
+const startingShadowBoard = arrayGenerator(boardLength, "")
 
 type BoardType = string[][]
 
-const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNext: boolean) => {
+const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNext: boolean) : BoardType => {
+  // This takes in a game board state and a move
+  // and returns an updated board with that move incorporated
   const newBoard = structuredClone(board)  
-  if (board[rowNum][colNum] != ""){
+  if (board[rowNum][colNum] != emptyLetter){
     console.log("ERROR: getUpdatedBoard attempted on occupied tile.")
   }
   newBoard[rowNum][colNum] = (bIsNext) ? blackLetter : whiteLetter
@@ -26,6 +29,8 @@ const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNe
 }
 
 const checkCell = (board: BoardType, rowNumber: number, colNumber: number) : string => {
+  // Lets you check a cell on a board without worrying about
+  // whether your coordinates are out of bounds
   if (
     rowNumber < 0 || colNumber < 0 || rowNumber >= board.length || colNumber >= board.length
   )
@@ -34,16 +39,11 @@ const checkCell = (board: BoardType, rowNumber: number, colNumber: number) : str
       outsideLetter
     )
   }
-  else {
-    const cell = board[rowNumber][colNumber]
-    if (cell === ""){
-      return libertyLetter
-    }
-    else return cell
-  }
+  else return board[rowNumber][colNumber]
 }
 
 const neighbourString = (board: BoardType, i: number, j: number) =>{
+  // Returns a string of the pieces occupying four neighbouring spaces
   // i is rowNumber, j is colNumber
   const north = checkCell( board, i-1, j )
   const south = checkCell( board, i+1, j )
@@ -53,7 +53,6 @@ const neighbourString = (board: BoardType, i: number, j: number) =>{
   return combined
   }
 
-const startingShadowBoard = structuredClone(startingBoard)
 
 const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard, focusOnBlack } : {gameBoard: BoardType, shadowBoard: BoardType, focusOnBlack: boolean}): BoardType => {
   
@@ -78,7 +77,7 @@ const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard, focusOnBlack } : {ga
       }
 
       // Any empty squares effectively have Liberty
-      else if (gameBoard[i][j] == ""){
+      else if (gameBoard[i][j] == emptyLetter){
         newShadowBoard[i][j] = "hasLiberty"
       }
 
@@ -93,7 +92,7 @@ const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard, focusOnBlack } : {ga
         const neighbours = neighbourString(gameBoard, i, j)
 
         // If one of those spaces is empty, you have Liberty
-        if (neighbours.includes(libertyLetter)) {
+        if (neighbours.includes(emptyLetter)) {
           newShadowBoard[i][j] = "hasLiberty"
         }
 
@@ -136,9 +135,9 @@ const removeCapturedStones = ({ gameBoard, shadowBoard } : {gameBoard: BoardType
   for (let i=0; i<gameBoard.length; i++){
     for (let j=0; j<gameBoard.length; j++){
 
+      // On shadowBoard, empty string at this stage means we have confirmed they do not have liberties
       if(shadowBoard[i][j] == "")
-        {newGameBoard[i][j] = ""}
-
+        {newGameBoard[i][j] = emptyLetter}
     }
   }
   return newGameBoard
@@ -226,12 +225,16 @@ const ShowTile = ({rowNum, colNum, board, setBoard, bIsNext, setBIsNext }: {rowN
       </div>
     )
   }
-  else return (
-    <a onClick={() => makeMove()}>
-    <div className = {sharedClassName + " " + nullClass}>
-      
-    </div>
-    </a>
+  else if (board[rowNum][colNum] === emptyLetter) {
+    return (
+      <a onClick={() => makeMove()}>
+      <div className = {sharedClassName + " " + nullClass}>
+        
+      </div>
+      </a>
+    )}
+  else return(
+    console.log("ERROR: Tiles detected with irregular values.")
   )
 }
 

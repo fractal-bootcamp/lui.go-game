@@ -11,7 +11,7 @@ const whiteLetter = whiteString[0]
 const emptyLetter = "E"
 const outsideLetter = "X"
 
-const boardLength = 6
+const boardLength = 9
 const startingBoard = textBoardGenerator(boardLength, emptyLetter)
 const startingShadowBoard = textBoardGenerator(boardLength, "")
 const startingInfluenceBoard = numberBoardGenerator(boardLength, 0)
@@ -195,7 +195,7 @@ const assessInfluenceAcrossBoard = ({ gameBoard, influenceBoard } : { gameBoard:
 
   const maxInfluence = 10
 
-  const localInfluence = 4
+  const localInfluence = 3
   const cardinalInfluence = 2
   const intercardinalInfluence = 1
   const supercardinalInfluence = 1
@@ -249,19 +249,31 @@ const assessInfluenceAcrossBoard = ({ gameBoard, influenceBoard } : { gameBoard:
       // If an empty tile is as strongly influenced as if it had a stone
       // let's give it a soft onward influence
       // Black first
-      // else if (newInfluenceBoard[i][j] > localInfluence) {
-      //   addToCell(newInfluenceBoard, i+1 , j, supercardinalInfluence, true)
-      //   addToCell(newInfluenceBoard, i-1, j, supercardinalInfluence, true)
-      //   addToCell(newInfluenceBoard, i, j+1, supercardinalInfluence, true)
-      //   addToCell(newInfluenceBoard, i, j-1, supercardinalInfluence, true)
-      // }
-      // // then White
-      // else if (newInfluenceBoard[i][j] < -localInfluence) {
-      //   addToCell(newInfluenceBoard, i+1 , j, supercardinalInfluence, false)
-      //   addToCell(newInfluenceBoard, i-1, j, supercardinalInfluence, false)
-      //   addToCell(newInfluenceBoard, i, j+1, supercardinalInfluence, false)
-      //   addToCell(newInfluenceBoard, i, j-1, supercardinalInfluence, false)
-      // }
+      else if (newInfluenceBoard[i][j] > localInfluence) {
+        addToCell(newInfluenceBoard, i+1 , j, supercardinalInfluence, true)
+        addToCell(newInfluenceBoard, i-1, j, supercardinalInfluence, true)
+        addToCell(newInfluenceBoard, i, j+1, supercardinalInfluence, true)
+        addToCell(newInfluenceBoard, i, j-1, supercardinalInfluence, true)
+
+        //let's also include intercardinals here
+        addToCell(newInfluenceBoard, i+1 , j+1, supercardinalInfluence, true)
+        addToCell(newInfluenceBoard, i-1, j-1, supercardinalInfluence, true)
+        addToCell(newInfluenceBoard, i-1, j+1, supercardinalInfluence, true)
+        addToCell(newInfluenceBoard, i+1, j-1, supercardinalInfluence, true)
+      }
+      // then White
+      else if (newInfluenceBoard[i][j] < -localInfluence) {
+        addToCell(newInfluenceBoard, i+1 , j, supercardinalInfluence, false)
+        addToCell(newInfluenceBoard, i-1, j, supercardinalInfluence, false)
+        addToCell(newInfluenceBoard, i, j+1, supercardinalInfluence, false)
+        addToCell(newInfluenceBoard, i, j-1, supercardinalInfluence, false)
+
+        //let's also include intercardinals here
+        addToCell(newInfluenceBoard, i+1 , j+1, supercardinalInfluence, false)
+        addToCell(newInfluenceBoard, i-1, j-1, supercardinalInfluence, false)
+        addToCell(newInfluenceBoard, i-1, j+1, supercardinalInfluence, false)
+        addToCell(newInfluenceBoard, i+1, j-1, supercardinalInfluence, false)
+      }
     }
   }
 
@@ -544,6 +556,7 @@ export default App
 // COMING UP NEXT
 // 
 // Influence version of shadowBoard
+// Show influence in tile colour
 // Count captured pieces somewhere
 // End of game scoring
 // Display captured pieces on sides

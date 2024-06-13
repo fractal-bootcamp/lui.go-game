@@ -14,6 +14,7 @@ const outsideLetter = "X"
 const boardLength = 9
 const startingBoard = arrayGenerator(boardLength, emptyLetter)
 const startingShadowBoard = arrayGenerator(boardLength, "")
+const startingInfluenceBoard = arrayGenerator(boardLength, 0)
 
 type BoardType = string[][]
 
@@ -63,11 +64,10 @@ const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard, focusOnBlack } : {ga
   // This must take in both the gameBoard and the shadowBoard because it is recursive
   // and state of the shadowBoard changes at different levels of recursion
 
-  const newGameBoard = structuredClone(gameBoard)
   const newShadowBoard = structuredClone(shadowBoard)
 
-  for (let i=0; i<newGameBoard.length; i++){
-    for (let j=0; j<newGameBoard.length; j++){
+  for (let i=0; i<gameBoard.length; i++){
+    for (let j=0; j<gameBoard.length; j++){
 
       // Check and skip anything that has already been assessed has having Liberty
       if (newShadowBoard[i][j] == "hasLiberty"){
@@ -101,25 +101,25 @@ const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard, focusOnBlack } : {ga
         // 2 - Have Liberty
 
         // Let's check North
-        else if ( checkCell(newGameBoard, i-1, j) === newGameBoard[i][j] && checkCell (newShadowBoard, i-1, j) === "hasLiberty") {
+        else if ( checkCell(gameBoard, i-1, j) === gameBoard[i][j] && checkCell (newShadowBoard, i-1, j) === "hasLiberty") {
           newShadowBoard[i][j] = "hasLiberty"
         }
         // Let's check South
-        else if ( checkCell(newGameBoard, i+1, j) === newGameBoard[i][j] && checkCell (newShadowBoard, i+1, j) === "hasLiberty") {
+        else if ( checkCell(gameBoard, i+1, j) === gameBoard[i][j] && checkCell (newShadowBoard, i+1, j) === "hasLiberty") {
           newShadowBoard[i][j] = "hasLiberty"
         }
         // Let's check West
-        else if ( checkCell(newGameBoard, i, j-1) === newGameBoard[i][j] && checkCell (newShadowBoard, i, j-1) === "hasLiberty") {
+        else if ( checkCell(gameBoard, i, j-1) === gameBoard[i][j] && checkCell (newShadowBoard, i, j-1) === "hasLiberty") {
           newShadowBoard[i][j] = "hasLiberty"
         }
         // Let's check East
-        else if ( checkCell(newGameBoard, i, j+1) === newGameBoard[i][j] && checkCell (newShadowBoard, i, j+1) === "hasLiberty") {
+        else if ( checkCell(gameBoard, i, j+1) === gameBoard[i][j] && checkCell (newShadowBoard, i, j+1) === "hasLiberty") {
           newShadowBoard[i][j] = "hasLiberty"
         }
       }
     }
   }
-  console.log("checkForCapturesBigger has been called and looped.")
+  console.log("Recursive function called: assessLibertyAcrossBoard")
   if (JSON.stringify(shadowBoard) != JSON.stringify(newShadowBoard)) {
     const newNewShadowBoard = assessLibertyAcrossBoard({gameBoard : gameBoard, shadowBoard : newShadowBoard, focusOnBlack: focusOnBlack});
     return newNewShadowBoard
@@ -140,6 +140,135 @@ const removeCapturedStones = ({ gameBoard, shadowBoard } : {gameBoard: BoardType
   }
   return newGameBoard
 }
+
+
+
+
+
+
+
+
+const assessInfluenceAcrossBoard = ({ gameBoard, influenceBoard } : { gameBoard: BoardType, influenceBoard: number[][] }): number[][] => {
+  
+  // We assess influence without reference to whose go it is
+  // Function must take in both the gameBoard and the influenceBoard because it is recursive
+  // and state of the influenceBoard changes at different levels of recursion
+
+
+  // For the influence values:
+  // BLACK = POSITIVE INTEGERS
+  // WHITE = NEGATIVE INTEGERS
+
+  // TBD - do we need to limit this with a recursion count?
+
+  const newInfluenceBoard = structuredClone(influenceBoard)
+
+  // Algorithm Parameters
+
+  const maxInfluence = 10
+
+  const localInfluence = 5
+  const cardinalInfluence = 2
+  const intercardinalInfluence = 1
+  const supercardinalInfluence = 1
+
+  // local means the stone's one tile
+  // cardinal means N | S | W | E
+  // intercardinal means NW | NE | SW | SE
+  // supercardinal (made up word) here means NN | SS | WW | EE
+
+  for (let i=0; i<gameBoard.length; i++){
+    for (let j=0; j<gameBoard.length; j++){
+
+      // Skip anything that has already hit a maximum influence
+      if (Math.abs(newInfluenceBoard[i][j]) >= maxInfluence){
+        null 
+      }
+
+      // If the tile has a stone on it, assign local/cardinal/inter/super influence
+      
+
+      //
+      //
+      //
+      //
+      // Any empty squares effectively have Liberty
+      else if (gameBoard[i][j] == emptyLetter){
+        newShadowBoard[i][j] = "hasLiberty"
+      }
+
+      // Every time we run this function one player is treated as "Safe"
+      // Let's just pretend here their pieces enjoy liberty
+      else if (gameBoard[i][j] == safeLetter){
+        newShadowBoard[i][j] = "hasLiberty"
+      }
+
+      // For non-empty spaces, we want to know what lives in the neighouring spaces
+      else {
+        const neighbours = neighbourString(gameBoard, i, j)
+
+        // If one of those spaces is empty, you have Liberty
+        if (neighbours.includes(emptyLetter)) {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+
+        // If you're the most recently placed stone
+        // If one of those spaces is non-empty, we have two conditions to gain Liberty.
+        // Neighbouring space must:
+        // 1 - Be of the same colour
+        // 2 - Have Liberty
+
+        // Let's check North
+        else if ( checkCell(gameBoard, i-1, j) === gameBoard[i][j] && checkCell (newShadowBoard, i-1, j) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+        // Let's check South
+        else if ( checkCell(gameBoard, i+1, j) === gameBoard[i][j] && checkCell (newShadowBoard, i+1, j) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+        // Let's check West
+        else if ( checkCell(gameBoard, i, j-1) === gameBoard[i][j] && checkCell (newShadowBoard, i, j-1) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+        // Let's check East
+        else if ( checkCell(gameBoard, i, j+1) === gameBoard[i][j] && checkCell (newShadowBoard, i, j+1) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+      }
+    }
+  }
+  console.log("Recursive function called: assessLibertyAcrossBoard")
+  if (JSON.stringify(shadowBoard) != JSON.stringify(newShadowBoard)) {
+    const newNewShadowBoard = assessLibertyAcrossBoard({gameBoard : gameBoard, shadowBoard : newShadowBoard, focusOnBlack: focusOnBlack});
+    return newNewShadowBoard
+  }
+  else return newInfluenceBoard
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 type WinState = {
   outcome: string | null,
@@ -264,8 +393,6 @@ const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType
           )
         }
       )}
-
-
     </>
   )
 

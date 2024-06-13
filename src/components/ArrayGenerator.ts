@@ -1,6 +1,6 @@
 
 
-export const arrayGenerator = (rowsAndCols: number, defaultCellValue: string) : string[][] => {
+export const arrayGenerator = (rowsAndCols: number, defaultCellValue: string | number) : string[][] | number[][] => {
     if (rowsAndCols <= 0 || rowsAndCols >= 999 ) {
         throw new Error("Rows and columns must be positive integers under 999.");
     }

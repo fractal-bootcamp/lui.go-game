@@ -131,6 +131,10 @@ const removeCapturedStones = ({ gameBoard, shadowBoard } : {gameBoard: BoardType
   return newGameBoard
 }
 
+type WinState = {
+  outcome: string | null,
+  winner: string | null,
+}
 
 export const checkWinCondition = (board: typeof startingBoard) : WinState => {
   

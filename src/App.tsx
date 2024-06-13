@@ -3,7 +3,8 @@ import { useState } from 'react'
 import './App.css'
 import { arrayGenerator } from './components/ArrayGenerator';
 
-const startingBoard = arrayGenerator(9)
+const boardLength = 4
+const startingBoard = arrayGenerator(boardLength)
 
 const blackLetter = "B"
 const whiteLetter = "W"
@@ -45,8 +46,6 @@ const checkCell = (board: BoardType, rowNumber: number, colNumber: number) : str
   }
 }
 
-checkCell(startingBoard, 10, 1)
-
 const checkForCaptures = (board: BoardType): BoardType => {
 
   // i refers to rowNumber, j refers to colNumber
@@ -69,12 +68,86 @@ const checkForCaptures = (board: BoardType): BoardType => {
   return(newBoard)
 }
 
+const neighbourString = (board: BoardType, i: number, j: number) =>{
+  // i is rowNumber, j is colNumber
+  const north = checkCell( board, i-1, j )
+  const south = checkCell( board, i+1, j )
+  const west = checkCell( board, i, j-1 )
+  const east = checkCell( board, i, j+1 )
+  const combined = north + south + east + west
+  return combined
+  }
 
+const startingShadowBoard = structuredClone(startingBoard)
 
+const checkForCapturesBigger = ({ gameBoard, shadowBoard } : {gameBoard: BoardType, shadowBoard: BoardType}): BoardType => {
+  
+  const newGameBoard = structuredClone(gameBoard)
+  const newShadowBoard = structuredClone(shadowBoard)
 
+  for (let i=0; i<newGameBoard.length; i++){
+    for (let j=0; j<newGameBoard.length; j++){
 
+      // Check and skip anything that has already been assessed has having Liberty
+      if (newShadowBoard[i][j] == "hasLiberty"){
+        null 
+      }
 
+      // Any empty squares effectively have Liberty
+      else if (gameBoard[i][j] == ""){
+        newShadowBoard[i][j] = "hasLiberty"
+      }
 
+      // For non-empty spaces, we want to know what lives in the neighouring spaces
+      else {
+        const neighbours = neighbourString(gameBoard, i, j)
+
+        // If one of those spaces is empty, you have Liberty
+        if (neighbours.includes(libertyLetter)) {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+
+        // If one of those spaces is non-empty, we have two conditions to gain Liberty.
+        // Neighbouring space must:
+        // 1 - Be of the same colour
+        // 2 - Have Liberty
+
+        // Let's check North
+        else if ( checkCell(newGameBoard, i-1, j) === newGameBoard[i][j] && checkCell (newShadowBoard, i-1, j) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+        // Let's check South
+        else if ( checkCell(newGameBoard, i+1, j) === newGameBoard[i][j] && checkCell (newShadowBoard, i+1, j) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+        // Let's check West
+        else if ( checkCell(newGameBoard, i, j-1) === newGameBoard[i][j] && checkCell (newShadowBoard, i, j-1) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+        // Let's check East
+        else if ( checkCell(newGameBoard, i, j+1) === newGameBoard[i][j] && checkCell (newShadowBoard, i, j+1) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+      }
+    }
+  }
+  console.log("checkForCapturesBigger has been called and looped.")
+  if (JSON.stringify(shadowBoard) != JSON.stringify(newShadowBoard)) {
+    const newNewShadowBoard = checkForCapturesBigger({gameBoard : gameBoard, shadowBoard : newShadowBoard});
+    return newNewShadowBoard
+  }
+  else return newShadowBoard
+}
+// checkForCapturesBigger ({ gameBoard: startingBoard, shadowBoard: startingShadowBoard})
+
+// const sampleGroup = {
+//   stoneColour: "black",
+//   hasLiberty: false,
+//   tiles: [
+//     (5,6),
+//     (5,7),
+//     ]
+// }
 
 
 
@@ -245,7 +318,12 @@ const ShowResults = ( {outcome, winner} : {outcome: string | null, winner: strin
 function App() {
   console.log("==== APP REFRESH ====")
   const [board, setBoard] = useState(structuredClone(startingBoard))
+  // const [shadowBoard, setShadowBoard] = useState(structuredClone(startingShadowBoard))
   const [bIsNext, setBIsNext] = useState(true)
+
+  const testTheShadowBoard = checkForCapturesBigger({gameBoard : board, shadowBoard : startingShadowBoard})
+
+  console.log("state of the shadowboard:", testTheShadowBoard)
 
   const currentWinState = checkWinCondition(board)
 

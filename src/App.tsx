@@ -3,17 +3,13 @@ import { useState } from 'react'
 import './App.css'
 import { arrayGenerator } from './components/ArrayGenerator';
 
-const startingBoard = arrayGenerator(9)
+const boardLength = 4
+const startingBoard = arrayGenerator(boardLength)
 
 const blackLetter = "B"
 const whiteLetter = "W"
 const outsideLetter = "X"
 const libertyLetter = "L"
-
-type WinState = {
-  outcome: string | null;
-  winner: string | null;
-}
 
 type BoardType = string[][]
 
@@ -22,7 +18,6 @@ const getUpdatedBoard = (board: BoardType, rowNum: number, colNum: number, bIsNe
   if (board[rowNum][colNum] != ""){
     console.log("ERROR: getUpdatedBoard attempted on occupied tile.")
   }
- 
   newBoard[rowNum][colNum] = (bIsNext) ? blackLetter : whiteLetter
   return newBoard
 }
@@ -45,48 +40,93 @@ const checkCell = (board: BoardType, rowNumber: number, colNumber: number) : str
   }
 }
 
-checkCell(startingBoard, 10, 1)
+const neighbourString = (board: BoardType, i: number, j: number) =>{
+  // i is rowNumber, j is colNumber
+  const north = checkCell( board, i-1, j )
+  const south = checkCell( board, i+1, j )
+  const west = checkCell( board, i, j-1 )
+  const east = checkCell( board, i, j+1 )
+  const combined = north + south + east + west
+  return combined
+  }
 
-const checkForCaptures = (board: BoardType): BoardType => {
+const startingShadowBoard = structuredClone(startingBoard)
 
-  // i refers to rowNumber, j refers to colNumber
-  const newBoard = structuredClone(board)
+const assessLibertyAcrossBoard = ({ gameBoard, shadowBoard } : {gameBoard: BoardType, shadowBoard: BoardType}): BoardType => {
+  
+  // This must take in both the gameBoard and the shadowBoard because it is recursive
+  // and state of the shadowBoard changes at different levels of recursion
 
-  for (let i=0; i<board.length; i++){
-    for (let j=0; j<board.length; j++){
-      const north = checkCell( board, i-1, j )
-      const south = checkCell( board, i+1, j )
-      const west = checkCell( board, i, j-1 )
-      const east = checkCell( board, i, j+1 )
-      const combined = north + south + east + west
+  const newGameBoard = structuredClone(gameBoard)
+  const newShadowBoard = structuredClone(shadowBoard)
 
-      if (!combined.includes(libertyLetter) && !combined.includes(board[i][j])){
-        newBoard[i][j] = ""
-        // Add in some kind of count of captured pieces here as well
+  for (let i=0; i<newGameBoard.length; i++){
+    for (let j=0; j<newGameBoard.length; j++){
+
+      // Check and skip anything that has already been assessed has having Liberty
+      if (newShadowBoard[i][j] == "hasLiberty"){
+        null 
+      }
+
+      // Any empty squares effectively have Liberty
+      else if (gameBoard[i][j] == ""){
+        newShadowBoard[i][j] = "hasLiberty"
+      }
+
+      // For non-empty spaces, we want to know what lives in the neighouring spaces
+      else {
+        const neighbours = neighbourString(gameBoard, i, j)
+
+        // If one of those spaces is empty, you have Liberty
+        if (neighbours.includes(libertyLetter)) {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+
+        // If one of those spaces is non-empty, we have two conditions to gain Liberty.
+        // Neighbouring space must:
+        // 1 - Be of the same colour
+        // 2 - Have Liberty
+
+        // Let's check North
+        else if ( checkCell(newGameBoard, i-1, j) === newGameBoard[i][j] && checkCell (newShadowBoard, i-1, j) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+        // Let's check South
+        else if ( checkCell(newGameBoard, i+1, j) === newGameBoard[i][j] && checkCell (newShadowBoard, i+1, j) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+        // Let's check West
+        else if ( checkCell(newGameBoard, i, j-1) === newGameBoard[i][j] && checkCell (newShadowBoard, i, j-1) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
+        // Let's check East
+        else if ( checkCell(newGameBoard, i, j+1) === newGameBoard[i][j] && checkCell (newShadowBoard, i, j+1) === "hasLiberty") {
+          newShadowBoard[i][j] = "hasLiberty"
+        }
       }
     }
   }
-  return(newBoard)
+  console.log("checkForCapturesBigger has been called and looped.")
+  if (JSON.stringify(shadowBoard) != JSON.stringify(newShadowBoard)) {
+    const newNewShadowBoard = assessLibertyAcrossBoard({gameBoard : gameBoard, shadowBoard : newShadowBoard});
+    return newNewShadowBoard
+  }
+  else return newShadowBoard
 }
 
+const removeCapturedStones = ({ gameBoard, shadowBoard } : {gameBoard: BoardType, shadowBoard: BoardType}): BoardType => {
+  const newGameBoard = structuredClone(gameBoard)
 
+  for (let i=0; i<gameBoard.length; i++){
+    for (let j=0; j<gameBoard.length; j++){
 
+      if(shadowBoard[i][j] == "")
+        {newGameBoard[i][j] = ""}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    }
+  }
+  return newGameBoard
+}
 
 
 export const checkWinCondition = (board: typeof startingBoard) : WinState => {
@@ -247,14 +287,16 @@ function App() {
   const [board, setBoard] = useState(structuredClone(startingBoard))
   const [bIsNext, setBIsNext] = useState(true)
 
+  const freshShadowBoard = assessLibertyAcrossBoard({gameBoard : board, shadowBoard : startingShadowBoard})
+  const freshGameBoard = removeCapturedStones({gameBoard: board, shadowBoard: freshShadowBoard})
+
   const currentWinState = checkWinCondition(board)
 
-  const newBoard = checkForCaptures(board)
   if(
-    JSON.stringify(board) != JSON.stringify(newBoard)
+    JSON.stringify(board) != JSON.stringify(freshGameBoard)
   ){
-    console.log("not the same")
-    setBoard(newBoard)
+    console.log("Stone(s) have been captured.")
+    setBoard(freshGameBoard)
   }
 
   return (
@@ -272,3 +314,17 @@ function App() {
 }
 
 export default App
+
+
+
+// 
+// COMING UP NEXT
+// 
+// Pass button
+// protect the just placed stone (unless it's a suicide)
+// influence version of shadowBoard
+// End of game scoring
+// Ko
+// 
+
+

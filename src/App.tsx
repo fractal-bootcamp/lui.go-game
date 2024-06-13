@@ -35,9 +35,7 @@ const checkCell = (board: BoardType, rowNumber: number, colNumber: number) : str
     rowNumber < 0 || colNumber < 0 || rowNumber >= board.length || colNumber >= board.length
   )
   {
-    return(
-      outsideLetter
-    )
+    return outsideLetter
   }
   else return board[rowNumber][colNumber]
 }
@@ -252,7 +250,8 @@ const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType
           return(
               <div className={sharedRowClassName}>
               {rowArray.map(
-                  (cell, colIndex) => 
+                // if have a  declared value and you don't intend to ever call it, give it an underscore
+                  (_cell, colIndex) => 
                     <ShowTile 
                       rowNum={rowIndex} 
                       colNum={colIndex} 

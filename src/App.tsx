@@ -206,20 +206,43 @@ const assessLibertyAcrossBoard = ({
 const removeCapturedStones = ({
   gameBoard,
   shadowBoard,
+  gameScore,
+  setGameScore,
 }: {
   gameBoard: TextBoard;
   shadowBoard: TextBoard;
+  gameScore: GameScore;
+  setGameScore: Function;
 }): TextBoard => {
   const newGameBoard = structuredClone(gameBoard);
+
+  let newCaptivesB2W = 0
+  let newCaptivesW2B = 0
 
   for (let i = 0; i < gameBoard.length; i++) {
     for (let j = 0; j < gameBoard.length; j++) {
       // On shadowBoard, empty string at this stage means we have confirmed they do not have liberties
       if (shadowBoard[i][j] == "") {
+        if (gameBoard[i][j] === blackLetter){
+          newCaptivesB2W += 1;
+          setGameScore({...gameScore, blackStonesLostToWhite:(gameScore.blackStonesLostToWhite+newCaptivesB2W)})
+        }
+        else if (gameBoard[i][j] === whiteLetter){
+          newCaptivesW2B += 1
+          setGameScore({...gameScore, whiteStonesLostToBlack:(gameScore.whiteStonesLostToBlack+newCaptivesW2B)})
+        }
         newGameBoard[i][j] = emptyLetter;
       }
     }
   }
+
+  // This is where I would expect to place the setGameScore function, but for some reason it causes
+  // an infinite re-render loop. M
+  // setGameScore({
+  //   ...gameScore, 
+  //   // blackStonesLostToWhite:(gameScore.blackStonesLostToWhite+newCaptivesB2W),
+  //   // whiteStonesLostToBlack:(gameScore.whiteStonesLostToBlack+newCaptivesW2B),
+  //  })
   return newGameBoard;
 };
 
@@ -720,6 +743,8 @@ function App() {
     const freshGameBoard = removeCapturedStones({
       gameBoard: board,
       shadowBoard: freshShadowBoard,
+      gameScore: gameScore,
+      setGameScore: setGameScore,
     });
 
     // Then we run it again to assess for suicides
@@ -731,6 +756,8 @@ function App() {
     const freshGameBoard2 = removeCapturedStones({
       gameBoard: freshGameBoard,
       shadowBoard: freshShadowBoard2,
+      gameScore: gameScore,
+      setGameScore: setGameScore,
     });
 
     if (JSON.stringify(board) != JSON.stringify(freshGameBoard2)) {

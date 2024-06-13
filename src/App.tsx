@@ -3,7 +3,7 @@ import { useState } from 'react'
 import './App.css'
 import { arrayGenerator } from './components/ArrayGenerator';
 
-const boardLength = 4
+const boardLength = 9
 const startingBoard = arrayGenerator(boardLength)
 
 const blackLetter = "B"
@@ -161,13 +161,13 @@ const blackStoneClass = "bg-zinc-600 rounded-full"
 const whiteTextClass = "text-stone-300"
 const whiteStoneClass = "bg-stone-100 rounded-full"
 
-const NextPlayerMessage = ({ bIsNext: bIsNext } : { bIsNext: boolean }) => {
+const NextPlayerMessage = ({ bIsNext } : { bIsNext: boolean }) => {
 
   const nextPlayer = (bIsNext) ? "Black" : "White"
   let className = (bIsNext) ? blackTextClass : whiteTextClass
   className = className + " text-2xl font-bold"
   return(
-    <div>
+    <div className='p-5'>
       <div>
         Next move is:
       </div>
@@ -246,6 +246,15 @@ const ShowBoard = ({ board, setBoard, bIsNext, setBIsNext } : { board: BoardType
 
 }
 
+const buttonStyling = 'p-5'
+
+const PassButton = ({ bIsNext , setBIsNext } : { bIsNext: boolean, setBIsNext: Function }) => {
+  return(
+    <div className={buttonStyling}>
+      <button onClick={() => setBIsNext(!bIsNext)}>Pass</button>
+    </div>
+)
+}
 const RefreshButton = ({ setBoard, setBIsNext } : { setBoard: Function, setBIsNext: Function }) => {
   
   const refreshBoard = () => {
@@ -254,11 +263,9 @@ const RefreshButton = ({ setBoard, setBIsNext } : { setBoard: Function, setBIsNe
   }
 
   return(
-    <>
-      <br />
+    <div className={buttonStyling}>
       <button onClick={() => refreshBoard()}>Start again</button>
-      <br />
-    </>
+    </div>
   )
 }
 
@@ -302,9 +309,10 @@ function App() {
   return (
     <>
       <NextPlayerMessage bIsNext={bIsNext} />
-      <br />
 
       <ShowBoard  board={board} setBoard= {setBoard} bIsNext={bIsNext} setBIsNext={setBIsNext}/>
+
+      <PassButton bIsNext = {bIsNext} setBIsNext = {setBIsNext} />
 
       <RefreshButton setBoard = {setBoard} setBIsNext = {setBIsNext} />
 
@@ -320,11 +328,16 @@ export default App
 // 
 // COMING UP NEXT
 // 
-// Pass button
-// protect the just placed stone (unless it's a suicide)
-// influence version of shadowBoard
+// Protect the just placed stone (unless it's a suicide)
+// Influence version of shadowBoard
+// Count captured pieces somewhere
 // End of game scoring
+// Display captured pieces on sides
+// NPC opponent
+// Make NPC optional
+// Let user choose colours
 // Ko
-// 
+// Snazzy alert when Atari happens 
+//
 
 

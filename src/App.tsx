@@ -681,6 +681,7 @@ type UserSettings = {
   showInfluence: boolean
 }
 
+
 function App() {
   console.log("==== APP REFRESH ====");
   const [board, setBoard] = useState(structuredClone(startingBoard));

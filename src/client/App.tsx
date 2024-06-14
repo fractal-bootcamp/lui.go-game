@@ -10,7 +10,7 @@ import {
 
 import {
   addNewStone,
-  removeCapturedStones,
+  removeCapturedStonesOneCycle,
 } from "../shared/BoardUpdaters"
 
 
@@ -19,7 +19,7 @@ import "./App.css";
 import {
   numberBoardGenerator,
   textBoardGenerator,
-} from "./ArrayGenerator";
+} from "../shared/ArrayGenerator";
 
 import {
   blackString,
@@ -318,6 +318,8 @@ function App() {
     setBIsNext(true);
   },[userSettings.boardSize])
 
+
+
   const [board, setBoard] = useState(structuredClone(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)));
   const [bIsNext, setBIsNext] = useState(true);
   const [passCount, setPassCount] = useState(0);
@@ -327,14 +329,14 @@ function App() {
   })
 
   // We don't need to run our heavy algos if a user has just passed
-  if (passCount === 0) {
+  if (passCount === 0 && boardLengthDict[userSettings.boardSize] === board.length) {
     // We run this once where we treat the player who just moved as "Safe"
     const freshLibertyBoard = assessLibertyAcrossBoard({
       gameBoard: board,
       libertyBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
       focusOnBlack: bIsNext,
     });
-    const freshGameBoard = removeCapturedStones({
+    const freshGameBoard = removeCapturedStonesOneCycle({
       gameBoard: board,
       libertyBoard: freshLibertyBoard,
       gameScore: gameScore,
@@ -347,7 +349,7 @@ function App() {
       libertyBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
       focusOnBlack: !bIsNext,
     });
-    const freshGameBoard2 = removeCapturedStones({
+    const freshGameBoard2 = removeCapturedStonesOneCycle({
       gameBoard: freshGameBoard,
       libertyBoard: freshLibertyBoard2,
       gameScore: gameScore,

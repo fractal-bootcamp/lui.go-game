@@ -1,3 +1,5 @@
+import { textBoardGenerator } from "../shared/ArrayGenerator";
+
 export const blackString = "Black";
 export const whiteString = "White";
 
@@ -18,16 +20,29 @@ export type WinState = {
   winner: string | null;
 };
 
+export type GameScore = {
+  blackStonesLostToWhite: number;
+  whiteStonesLostToBlack: number;
+};
+
 export type Game = {
   id: string;
   gameBoard: string[][];
   bIsNext: boolean;
+  passCount: number;
+  gameScore: GameScore;
   winState: { outcome: "WIN" | "TIE" | null; winner: "X" | "O" | null };
   player1: { token: string; id: string };
   player2: { token: string; id: string };
 };
 
-export type GameScore = {
-  blackStonesLostToWhite: number;
-  whiteStonesLostToBlack: number;
+export const exampleGame = {
+  id: "fuzzy-cow",
+  gameBoard: structuredClone(textBoardGenerator(9, "E")),
+  bIsNext: true,
+  passCount: 0,
+  gameScore: { blackStonesLostToWhite: 0, whiteStonesLostToBlack: 0 },
+  winState: { outcome: null, winner: null },
+  player1: { token: "player1", id: "player1" },
+  player2: { token: "player2", id: "player2" },
 };

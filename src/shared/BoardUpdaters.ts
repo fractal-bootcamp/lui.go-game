@@ -3,7 +3,12 @@ import {
   whiteLetter,
   emptyLetter,
   GameScore,
+  Game,
 } from "../shared/constants";
+
+import { assessLibertyAcrossBoard } from "../shared/BoardAssessors";
+
+import { textBoardGenerator } from "./ArrayGenerator";
 
 export const addNewStone = (
   board: string[][],
@@ -21,7 +26,7 @@ export const addNewStone = (
   return newBoard;
 };
 
-export const removeCapturedStones = ({
+export const removeCapturedStonesOneCycle = ({
   gameBoard,
   libertyBoard,
   gameScore,
@@ -69,4 +74,42 @@ export const removeCapturedStones = ({
   //   // whiteStonesLostToBlack:(gameScore.whiteStonesLostToBlack+newCaptivesW2B),
   //  })
   return newGameBoard;
+};
+
+export const removeCapturedStones = (game: Game, setGame: Function) => {
+  // We don't need to run our heavy algos if a user has just passed
+  if (game.passCount === 0) {
+    // We run this once where we treat the player who just moved as "Safe"
+    const freshLibertyBoard = assessLibertyAcrossBoard({
+      gameBoard: game.gameBoard,
+      libertyBoard: textBoardGenerator(game.gameBoard.length, ""),
+      focusOnBlack: game.bIsNext,
+    });
+    const freshGameBoard = removeCapturedStonesOneCycle({
+      gameBoard: game.gameBoard,
+      libertyBoard: freshLibertyBoard,
+      gameScore: game.gameScore,
+      setGameScore: setGameScore,
+    });
+
+    // Then we run it again to assess for suicides
+    const freshLibertyBoard2 = assessLibertyAcrossBoard({
+      gameBoard: freshGameBoard,
+      libertyBoard: textBoardGenerator(game.gameBoard.length, ""),
+      focusOnBlack: !game.bIsNext,
+    });
+    const freshGameBoard2 = removeCapturedStonesOneCycle({
+      gameBoard: freshGameBoard,
+      libertyBoard: freshLibertyBoard2,
+      gameScore: game.gameScore,
+      setGameScore: setGameScore,
+    });
+
+    if (JSON.stringify(game.gameBoard) != JSON.stringify(freshGameBoard2)) {
+      console.log("Stone(s) have been captured.");
+      setBoard(freshGameBoard2);
+    }
+  }
+
+  return game;
 };

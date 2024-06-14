@@ -1,4 +1,3 @@
-
 export const blackString = "Black";
 export const whiteString = "White";
 
@@ -12,23 +11,23 @@ export const boardLengthDict = {
   Medium: 13,
   Large: 19,
   // Any new values here will also need to be added to UserSettings type
-}
+};
 
 export type WinState = {
-    outcome: string | null;
-    winner: string | null;
-  };
+  outcome: string | null;
+  winner: string | null;
+};
 
 export type Game = {
-  id: string,
-  gameBoard: string[][],
-  bIsNext: boolean,
-  winState: { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
-  player1: { token: string, id: string },
-  player2: { token: string, id: string },
-}
+  id: string;
+  gameBoard: string[][];
+  bIsNext: boolean;
+  winState: { outcome: "WIN" | "TIE" | null; winner: "X" | "O" | null };
+  player1: { token: string; id: string };
+  player2: { token: string; id: string };
+};
 
 export type GameScore = {
-  blackStonesLostToWhite: number
-  whiteStonesLostToBlack: number
-}
+  blackStonesLostToWhite: number;
+  whiteStonesLostToBlack: number;
+};

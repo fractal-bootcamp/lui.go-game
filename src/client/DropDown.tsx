@@ -4,9 +4,6 @@ import { UserSettings } from "./App";
 export const SizeDropdown = ({ userSettings, setUserSettings }: { userSettings: UserSettings, setUserSettings: Function}) => {
     const [isOpen, setOpen] = useState(false)
   
-    console.log("ShowSizeDropdown rendered")
-    console.log(userSettings)
-  
     const handleDropDown = () => {
       setOpen(!isOpen)
       console.log("click registered")

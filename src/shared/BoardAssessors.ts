@@ -67,7 +67,6 @@ export const assessLibertyAcrossBoard = ({
   libertyBoard: string[][];
   focusOnBlack: boolean;
 }): string[][] => {
-  console.log("assessLibertyAcrossBoard");
   // After Black moves, we assess White's stones first, and then assess Black's (to assess for suicides)
   // So each time we run this function we focus on a single Player
   // If we're not focusing on the Player, we treat all their pieces as being safe, i.e. "hasLiberty"
@@ -82,7 +81,6 @@ export const assessLibertyAcrossBoard = ({
   for (let i = 0; i < gameBoard.length; i++) {
     for (let j = 0; j < gameBoard.length; j++) {
       // Check and skip anything that has already been assessed has having Liberty
-      console.log("ij:", i, j);
       if (newLibertyBoard[i][j] == "hasLiberty") {
         null;
       }
@@ -314,7 +312,6 @@ export const assessInfluenceAcrossBoard = ({
     }
   }
 
-  console.log("Recursive function called: assessInfluenceAcrossBoard");
   const newRecursionCount = recursionCount + 1;
   if (JSON.stringify(influenceBoard) != JSON.stringify(newInfluenceBoard)) {
     const newNewInfluenceBoard = assessInfluenceAcrossBoard({

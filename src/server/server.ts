@@ -1,7 +1,7 @@
 import express from "express"
 import cors from "cors";
 
-import {textBoardGenerator} from '../components/ArrayGenerator'
+import {textBoardGenerator} from '../client/ArrayGenerator'
 
 
 const app = express()

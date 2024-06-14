@@ -1,3 +1,10 @@
+import {
+    blackLetter,
+    whiteLetter,
+    emptyLetter,
+    outsideLetter,
+    WinState,
+  } from "./constants"
 
 const checkCell = (
     board: string[][],

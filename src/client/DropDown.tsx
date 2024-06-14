@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserSettings } from "../App";
+import { UserSettings } from "./App";
 
 export const SizeDropdown = ({ userSettings, setUserSettings }: { userSettings: UserSettings, setUserSettings: Function}) => {
     const [isOpen, setOpen] = useState(false)

@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 
-import { SizeDropdown } from "./components/DropDown";
+import { SizeDropdown } from "./DropDown";
 
 import {
   checkWinCondition,
   assessLibertyAcrossBoard,
   assessInfluenceAcrossBoard
-} from "./components/AssessmentFuncs"
+} from "../shared/AssessmentFuncs"
 
 import "./App.css";
 
 import {
   numberBoardGenerator,
   textBoardGenerator,
-} from "./components/ArrayGenerator";
+} from "./ArrayGenerator";
 
 import {
   blackString,
@@ -21,7 +21,7 @@ import {
   blackLetter,
   whiteLetter,
   emptyLetter,
-} from "./constants"
+} from "../shared/constants"
 
 
 const getUpdatedBoard = (
@@ -83,11 +83,6 @@ const removeCapturedStones = ({
   return newGameBoard;
 };
 
-
-export type WinState = {
-  outcome: string | null;
-  winner: string | null;
-};
 
 //// STYLING USED IN NextPlayerMessage AND ShowTile ////
 

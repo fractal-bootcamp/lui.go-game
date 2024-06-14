@@ -17,10 +17,6 @@ const whiteLetter = whiteString[0];
 const emptyLetter = "E";
 const outsideLetter = "X";
 
-// const boardLength = 9;
-// const startingBoard = textBoardGenerator(boardLength, emptyLetter);
-// const startingShadowBoard = textBoardGenerator(boardLength, "");
-// const startingInfluenceBoard = numberBoardGenerator(boardLength, 0);
 
 type TextBoard = string[][];
 type NumberBoard = number[][];
@@ -58,8 +54,6 @@ const checkCell = (
   } else return board[rowNumber][colNumber];
 };
 
-// This approach does NOT work
-// Need to either return a board, or just use a function like this to confirm that a tile is valid
 const addToCell = (
   board: number[][],
   rowNumber: number,
@@ -246,7 +240,11 @@ const assessInfluenceAcrossBoard = ({
   influenceBoard: NumberBoard;
   recursionCount: number;
 }): NumberBoard => {
+  console.log("calling assessInfluenceAcrossBoard with",gameBoard, influenceBoard, recursionCount )
 
+  if(gameBoard.length != influenceBoard.length){
+    return influenceBoard
+  }
   if(recursionCount > 2){
     return influenceBoard
   }
@@ -640,7 +638,7 @@ export type UserSettings = {
   showInfluence: boolean
   boardSize: "Small" | "Medium" | "Large"
   dropDownHidden: boolean
-  prodBoardLength: number
+  // prodBoardLength: number
 }
 
 type GameScore = {
@@ -648,34 +646,41 @@ type GameScore = {
   whiteStonesLostToBlack: number
 }
 
+const boardLengthDict = {
+  Small: 9,
+  Medium: 13,
+  Large: 19,
+  // Any new values here will also need to be added to UserSettings type
+}
+
 function App() {
   console.log("==== APP REFRESH ====");
 
   const [userSettings, setUserSettings] = useState<UserSettings>({
     showInfluence: false,
-    boardSize: "Medium",
+    boardSize: "Small",
     dropDownHidden: true,
-    prodBoardLength: 13,
+    // prodBoardLength: 13,
   });
 
 
-  const boardLengthDict = {
-    Small: 9,
-    Medium: 13,
-    Large: 19,
-    // Any new values here will also need to be added to UserSettings type
-  }
+
+ 
+
+  // Ignore the usersettings prodBoardLength, use boardLengthDict[userSettings.boardSize] instead
 
   console.log(boardLengthDict[userSettings.boardSize])
 
-  useEffect(()=>{
-      setBoard(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter));
-      setBIsNext(true);
-      setPassCount(0);
-    console.log('board size changed!')
-  },[userSettings.boardSize])
 
-  const [board, setBoard] = useState(structuredClone(textBoardGenerator(userSettings.prodBoardLength, emptyLetter)));
+
+
+ 
+  useEffect(()=> {
+    setBoard(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter))
+    setBIsNext(true);
+},[userSettings.boardSize])
+
+  const [board, setBoard] = useState(structuredClone(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)));
   const [bIsNext, setBIsNext] = useState(true);
   const [passCount, setPassCount] = useState(0);
   const [gameScore, setGameScore] = useState<GameScore>({
@@ -683,12 +688,13 @@ function App() {
     whiteStonesLostToBlack: 0
   })
 
+
   // We don't need to run our heavy algos if a user has just passed
   if (passCount === 0) {
     // We run this once where we treat the player who just moved as "Safe"
     const freshShadowBoard = assessLibertyAcrossBoard({
       gameBoard: board,
-      shadowBoard: textBoardGenerator(userSettings.prodBoardLength, ""),
+      shadowBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
       focusOnBlack: bIsNext,
     });
     const freshGameBoard = removeCapturedStones({
@@ -701,7 +707,7 @@ function App() {
     // Then we run it again to assess for suicides
     const freshShadowBoard2 = assessLibertyAcrossBoard({
       gameBoard: freshGameBoard,
-      shadowBoard: textBoardGenerator(userSettings.prodBoardLength, ""),
+      shadowBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
       focusOnBlack: !bIsNext,
     });
     const freshGameBoard2 = removeCapturedStones({
@@ -727,9 +733,11 @@ function App() {
     };
   }
 
+  // size of influence board in this function is pegged to the version of board in State
+  // because State sometimes lags slightly behind
   const influence = assessInfluenceAcrossBoard({
     gameBoard: board,
-    influenceBoard: numberBoardGenerator(userSettings.prodBoardLength, 0),
+    influenceBoard: numberBoardGenerator(board.length, 0),
     recursionCount: 0,
   });
   console.log(influence);
@@ -743,10 +751,7 @@ function App() {
         setUserSettings={setUserSettings}
       />
       <br />
-      <SizeDropdown
-        userSettings={userSettings}
-        setUserSettings={setUserSettings}
-      />
+
 
 
       <ShowScore gameScore={gameScore}/>
@@ -766,12 +771,16 @@ function App() {
         passCount={passCount}
         setPassCount={setPassCount}
       />
+      <SizeDropdown
+        userSettings={userSettings}
+        setUserSettings={setUserSettings}
+      />
 
       <RefreshButton
         setBoard={setBoard}
         setBIsNext={setBIsNext}
         setPassCount={setPassCount}
-        boardSize={userSettings.prodBoardLength}
+        boardSize={boardLengthDict[userSettings.boardSize]}
       />
 
       <ShowResults

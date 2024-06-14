@@ -382,7 +382,6 @@ function App() {
     whiteStonesLostToBlack: 0
   })
 
-
   // We don't need to run our heavy algos if a user has just passed
   if (passCount === 0) {
     // We run this once where we treat the player who just moved as "Safe"
@@ -416,7 +415,7 @@ function App() {
       setBoard(freshGameBoard2);
     }
   }
-
+  
   let currentWinState = checkWinCondition(board);
 
   if (passCount > 1) {

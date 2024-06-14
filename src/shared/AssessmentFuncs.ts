@@ -38,7 +38,6 @@ const addToCell = (
       rowNumber >= board.length ||
       colNumber >= board.length
     ) {
-      console.log("Yup");
     } else {
       if (isPositive) {
         board[rowNumber][colNumber] += operand;
@@ -69,6 +68,8 @@ export const assessLibertyAcrossBoard = ({
     libertyBoard: string[][];
     focusOnBlack: boolean;
   }): string[][] => {
+
+    console.log("assessLibertyAcrossBoard")
     // After Black moves, we assess White's stones first, and then assess Black's (to assess for suicides)
     // So each time we run this function we focus on a single Player
     // If we're not focusing on the Player, we treat all their pieces as being safe, i.e. "hasLiberty"
@@ -145,7 +146,6 @@ export const assessLibertyAcrossBoard = ({
         }
       }
     }
-    console.log("Recursive function called: assessLibertyAcrossBoard");
     if (JSON.stringify(libertyBoard) != JSON.stringify(newLibertyBoard)) {
       const newNewLibertyBoard = assessLibertyAcrossBoard({
         gameBoard: gameBoard,
@@ -165,9 +165,7 @@ export const assessLibertyAcrossBoard = ({
     gameBoard: string[][];
     influenceBoard: number[][];
     recursionCount: number;
-  }): number[][] => {
-    console.log("calling assessInfluenceAcrossBoard with",gameBoard, influenceBoard, recursionCount )
-  
+  }): number[][] => {  
     if(gameBoard.length != influenceBoard.length){
       return influenceBoard
     }

@@ -408,6 +408,8 @@ function App() {
       <SizeDropdown
         userSettings={userSettings}
         setUserSettings={setUserSettings}
+        settingKey="boardSize"
+        settingOptions={["Small", "Medium", "Large"]}
       />
 
       <RefreshButton
@@ -431,6 +433,10 @@ export default App;
 //
 // COMING UP NEXT
 //
+// Reusable DropDown
+// Add Multiplayer option to UserSettings
+// Start passing Game object that includes board, rather than smaller object
+// Enable user to enter a 
 // Fix the Influence algorithm so that it's rotationally balanced (assessments need to be made off older version of influence board)
 // Replace the boardsizenumber with boardLengthDict[userSettings.boardSize]
 // Count captured pieces somewhere

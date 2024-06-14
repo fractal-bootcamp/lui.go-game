@@ -85,20 +85,6 @@ const addToCell = (
   }
 };
 
-const validTile = (
-  board: number[][] | string[][],
-  rowNumber: number,
-  colNumber: number
-): boolean => {
-  if (
-    rowNumber < 0 ||
-    colNumber < 0 ||
-    rowNumber >= board.length ||
-    colNumber >= board.length
-  ) {
-    return false;
-  } else return true;
-};
 
 const neighbourString = (board: TextBoard, i: number, j: number) => {
   // Returns a string of the pieces occupying four neighbouring spaces
@@ -250,13 +236,20 @@ const removeCapturedStones = ({
   return newGameBoard;
 };
 
+
 const assessInfluenceAcrossBoard = ({
   gameBoard,
   influenceBoard,
+  recursionCount = 0,
 }: {
   gameBoard: TextBoard;
   influenceBoard: NumberBoard;
+  recursionCount: number;
 }): NumberBoard => {
+
+  if(recursionCount > 2){
+    return influenceBoard
+  }
   // We assess influence without reference to whose go it is
   // Function must take in both the gameBoard and the influenceBoard because it is recursive
   // and state of the influenceBoard changes at different levels of recursion
@@ -267,17 +260,20 @@ const assessInfluenceAcrossBoard = ({
 
   // Algorithm Parameters
 
-  const maxInfluence = 10;
-
-  const localInfluence = 3;
-  const cardinalInfluence = 2;
-  const intercardinalInfluence = 1;
-  const supercardinalInfluence = 1;
-
   // local means the stone's one tile
   // cardinal means N | S | W | E
   // intercardinal means NW | NE | SW | SE
   // supercardinal (made up word) here means NN | SS | WW | EE
+
+  const localInfluence = 3;
+
+  const cardinalInfluence = 4;
+  const intercardinalInfluence = 2;
+  const supercardinalInfluence = 1;
+
+  const cardinalDirections = [[1,0],[-1,0],[0,1],[0,-1]]
+  const interDirections = [[1,1],[-1,-1],[-1,1],[1,-1]]
+  const superDirections = [[2,0],[-2,0],[0,2],[0,-2]]
 
   for (let i = 0; i < gameBoard.length; i++) {
     for (let j = 0; j < gameBoard.length; j++) {
@@ -296,155 +292,60 @@ const assessInfluenceAcrossBoard = ({
       if (gameBoard[i][j] === blackLetter || gameBoard[i][j] === whiteLetter) {
         addToCell(newInfluenceBoard, i, j, localInfluence, isPositive);
 
-        addToCell(newInfluenceBoard, i + 1, j, cardinalInfluence, isPositive);
-        addToCell(newInfluenceBoard, i - 1, j, cardinalInfluence, isPositive);
-        addToCell(newInfluenceBoard, i, j + 1, cardinalInfluence, isPositive);
-        addToCell(newInfluenceBoard, i, j - 1, cardinalInfluence, isPositive);
+        // Cardinal
+        for (let dir = 0; dir < 4; dir++) {
+          addToCell(newInfluenceBoard, i + cardinalDirections[dir][0], j + cardinalDirections[dir][1], cardinalInfluence, isPositive)
+        }
 
-        addToCell(
-          newInfluenceBoard,
-          i + 1,
-          j + 1,
-          intercardinalInfluence,
-          isPositive
-        );
-        addToCell(
-          newInfluenceBoard,
-          i + 1,
-          j - 1,
-          intercardinalInfluence,
-          isPositive
-        );
-        addToCell(
-          newInfluenceBoard,
-          i - 1,
-          j + 1,
-          intercardinalInfluence,
-          isPositive
-        );
-        addToCell(
-          newInfluenceBoard,
-          i - 1,
-          j - 1,
-          intercardinalInfluence,
-          isPositive
-        );
+        // Intercardinal
+        for (let dir = 0; dir < 4; dir++) {
+          addToCell(newInfluenceBoard, i + interDirections[dir][0], j + interDirections[dir][1], intercardinalInfluence, isPositive)
+        }
 
-        addToCell(
-          newInfluenceBoard,
-          i + 2,
-          j,
-          supercardinalInfluence,
-          isPositive
-        );
-        addToCell(
-          newInfluenceBoard,
-          i - 2,
-          j,
-          supercardinalInfluence,
-          isPositive
-        );
-        addToCell(
-          newInfluenceBoard,
-          i,
-          j + 2,
-          supercardinalInfluence,
-          isPositive
-        );
-        addToCell(
-          newInfluenceBoard,
-          i,
-          j - 2,
-          supercardinalInfluence,
-          isPositive
-        );
+        // Supercardinal
+        for (let dir = 0; dir < 4; dir++) {
+          addToCell(newInfluenceBoard, i + superDirections[dir][0], j + superDirections[dir][1], supercardinalInfluence, isPositive)
+        }
       }
 
       // If an empty tile is as strongly influenced as if it had a stone
       // let's give it a soft onward influence
       // Black first
       else if (newInfluenceBoard[i][j] > localInfluence) {
-        addToCell(newInfluenceBoard, i + 1, j, supercardinalInfluence, true);
-        addToCell(newInfluenceBoard, i - 1, j, supercardinalInfluence, true);
-        addToCell(newInfluenceBoard, i, j + 1, supercardinalInfluence, true);
-        addToCell(newInfluenceBoard, i, j - 1, supercardinalInfluence, true);
 
-        //let's also include intercardinals here
-        addToCell(
-          newInfluenceBoard,
-          i + 1,
-          j + 1,
-          supercardinalInfluence,
-          true
-        );
-        addToCell(
-          newInfluenceBoard,
-          i - 1,
-          j - 1,
-          supercardinalInfluence,
-          true
-        );
-        addToCell(
-          newInfluenceBoard,
-          i - 1,
-          j + 1,
-          supercardinalInfluence,
-          true
-        );
-        addToCell(
-          newInfluenceBoard,
-          i + 1,
-          j - 1,
-          supercardinalInfluence,
-          true
-        );
+        // do this on intercardinal squares as well
+        for (let dir = 0; dir < 4; dir++) {
+          addToCell(newInfluenceBoard, i + superDirections[dir][0], j + superDirections[dir][1], supercardinalInfluence, true)
+        }
+
+        // do this on intercardinal squares as well
+        for (let dir = 0; dir < 4; dir++) {
+          addToCell(newInfluenceBoard, i + interDirections[dir][0], j + interDirections[dir][1], supercardinalInfluence, true)
+        }
       }
-      // then White
-      else if (newInfluenceBoard[i][j] < -localInfluence) {
-        addToCell(newInfluenceBoard, i + 1, j, supercardinalInfluence, false);
-        addToCell(newInfluenceBoard, i - 1, j, supercardinalInfluence, false);
-        addToCell(newInfluenceBoard, i, j + 1, supercardinalInfluence, false);
-        addToCell(newInfluenceBoard, i, j - 1, supercardinalInfluence, false);
 
-        //let's also include intercardinals here
-        addToCell(
-          newInfluenceBoard,
-          i + 1,
-          j + 1,
-          supercardinalInfluence,
-          false
-        );
-        addToCell(
-          newInfluenceBoard,
-          i - 1,
-          j - 1,
-          supercardinalInfluence,
-          false
-        );
-        addToCell(
-          newInfluenceBoard,
-          i - 1,
-          j + 1,
-          supercardinalInfluence,
-          false
-        );
-        addToCell(
-          newInfluenceBoard,
-          i + 1,
-          j - 1,
-          supercardinalInfluence,
-          false
-        );
+      // White second
+      else if (newInfluenceBoard[i][j] < -localInfluence) {
+        // do this on intercardinal squares as well
+        for (let dir = 0; dir < 4; dir++) {
+          addToCell(newInfluenceBoard, i + superDirections[dir][0], j + superDirections[dir][1], supercardinalInfluence, false)
+        }
+
+        // do this on intercardinal squares as well
+        for (let dir = 0; dir < 4; dir++) {
+          addToCell(newInfluenceBoard, i + interDirections[dir][0], j + interDirections[dir][1], supercardinalInfluence, false)
+        }
       }
     }
   }
 
-  // console.log("Recursive function called: assessInfluenceAcrossBoard")
-  // if (JSON.stringify(influenceBoard) != JSON.stringify(newInfluenceBoard)) {
-  //   const newNewInfluenceBoard = assessInfluenceAcrossBoard({gameBoard : gameBoard, influenceBoard : newInfluenceBoard});
-  //   return newNewInfluenceBoard
-  // }
-  // else return newInfluenceBoard
+  console.log("Recursive function called: assessInfluenceAcrossBoard")
+  const newRecursionCount = recursionCount + 1
+  if (JSON.stringify(influenceBoard) != JSON.stringify(newInfluenceBoard)) {
+    const newNewInfluenceBoard = assessInfluenceAcrossBoard({gameBoard : gameBoard, influenceBoard : newInfluenceBoard, recursionCount: newRecursionCount});
+    return newNewInfluenceBoard
+  }
+  else return newInfluenceBoard
 
   return newInfluenceBoard;
 };

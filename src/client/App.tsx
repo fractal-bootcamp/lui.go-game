@@ -6,7 +6,13 @@ import {
   checkWinCondition,
   assessLibertyAcrossBoard,
   assessInfluenceAcrossBoard
-} from "../shared/AssessmentFuncs"
+} from "../shared/BoardAssessors"
+
+import {
+  addNewStone,
+  removeCapturedStones,
+} from "../shared/BoardUpdaters"
+
 
 import "./App.css";
 
@@ -21,67 +27,10 @@ import {
   blackLetter,
   whiteLetter,
   emptyLetter,
+  boardLengthDict,
+  GameScore
 } from "../shared/constants"
 
-
-const getUpdatedBoard = (
-  board: string[][],
-  rowNum: number,
-  colNum: number,
-  bIsNext: boolean
-): string[][] => {
-  // This takes in a game board state and a move
-  // and returns an updated board with that move incorporated
-  const newBoard = structuredClone(board);
-  if (board[rowNum][colNum] != emptyLetter) {
-    console.log("ERROR: getUpdatedBoard attempted on occupied tile.");
-  }
-  newBoard[rowNum][colNum] = bIsNext ? blackLetter : whiteLetter;
-  return newBoard;
-};
-
-const removeCapturedStones = ({
-  gameBoard,
-  libertyBoard,
-  gameScore,
-  setGameScore,
-}: {
-  gameBoard: string[][];
-  libertyBoard: string[][];
-  gameScore: GameScore;
-  setGameScore: Function;
-}): string[][] => {
-  const newGameBoard = structuredClone(gameBoard);
-
-  let newCaptivesB2W = 0
-  let newCaptivesW2B = 0
-
-  for (let i = 0; i < gameBoard.length; i++) {
-    for (let j = 0; j < gameBoard.length; j++) {
-      // On libertyBoard, empty string at this stage means we have confirmed they do not have liberties
-      if (libertyBoard[i][j] == "") {
-        if (gameBoard[i][j] === blackLetter){
-          newCaptivesB2W += 1;
-          setGameScore({...gameScore, blackStonesLostToWhite:(gameScore.blackStonesLostToWhite+newCaptivesB2W)})
-        }
-        else if (gameBoard[i][j] === whiteLetter){
-          newCaptivesW2B += 1
-          setGameScore({...gameScore, whiteStonesLostToBlack:(gameScore.whiteStonesLostToBlack+newCaptivesW2B)})
-        }
-        newGameBoard[i][j] = emptyLetter;
-      }
-    }
-  }
-
-  // This is where I would expect to place the setGameScore function, but for some reason it causes
-  // an infinite re-render loop. M
-  // setGameScore({
-  //   ...gameScore, 
-  //   // blackStonesLostToWhite:(gameScore.blackStonesLostToWhite+newCaptivesB2W),
-  //   // whiteStonesLostToBlack:(gameScore.whiteStonesLostToBlack+newCaptivesW2B),
-  //  })
-  return newGameBoard;
-};
 
 
 //// STYLING USED IN NextPlayerMessage AND ShowTile ////
@@ -186,7 +135,7 @@ const ShowTile = ({
   const nullClass = "text-gray-500 cursor-pointer";
 
   const makeMove = () => {
-    setBoard(getUpdatedBoard(board, rowNum, colNum, bIsNext));
+    setBoard(addNewStone(board, rowNum, colNum, bIsNext));
     setBIsNext(!bIsNext);
   };
 
@@ -346,19 +295,12 @@ export type UserSettings = {
   showInfluence: boolean
   boardSize: "Small" | "Medium" | "Large"
   dropDownHidden: boolean
+  singlePlayer: boolean
 }
 
-type GameScore = {
-  blackStonesLostToWhite: number
-  whiteStonesLostToBlack: number
-}
 
-const boardLengthDict = {
-  Small: 9,
-  Medium: 13,
-  Large: 19,
-  // Any new values here will also need to be added to UserSettings type
-}
+
+
 
 function App() {
   console.log("==== APP REFRESH ====");
@@ -367,6 +309,7 @@ function App() {
     showInfluence: false,
     boardSize: "Small",
     dropDownHidden: true,
+    singlePlayer: true
   });
  
   useEffect(()=> {

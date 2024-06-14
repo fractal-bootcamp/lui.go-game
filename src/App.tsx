@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { SizeDropdown } from "./components/DropDown";
 
 import "./App.css";
 import {
   numberBoardGenerator,
   textBoardGenerator,
 } from "./components/ArrayGenerator";
+
 
 const blackString = "Black";
 const whiteString = "White";
@@ -14,10 +17,10 @@ const whiteLetter = whiteString[0];
 const emptyLetter = "E";
 const outsideLetter = "X";
 
-const boardLength = 9;
-const startingBoard = textBoardGenerator(boardLength, emptyLetter);
-const startingShadowBoard = textBoardGenerator(boardLength, "");
-const startingInfluenceBoard = numberBoardGenerator(boardLength, 0);
+// const boardLength = 9;
+// const startingBoard = textBoardGenerator(boardLength, emptyLetter);
+// const startingShadowBoard = textBoardGenerator(boardLength, "");
+// const startingInfluenceBoard = numberBoardGenerator(boardLength, 0);
 
 type TextBoard = string[][];
 type NumberBoard = number[][];
@@ -131,6 +134,7 @@ const assessLibertyAcrossBoard = ({
   for (let i = 0; i < gameBoard.length; i++) {
     for (let j = 0; j < gameBoard.length; j++) {
       // Check and skip anything that has already been assessed has having Liberty
+      console.log("ij:",i,j)
       if (newShadowBoard[i][j] == "hasLiberty") {
         null;
       }
@@ -206,20 +210,43 @@ const assessLibertyAcrossBoard = ({
 const removeCapturedStones = ({
   gameBoard,
   shadowBoard,
+  gameScore,
+  setGameScore,
 }: {
   gameBoard: TextBoard;
   shadowBoard: TextBoard;
+  gameScore: GameScore;
+  setGameScore: Function;
 }): TextBoard => {
   const newGameBoard = structuredClone(gameBoard);
+
+  let newCaptivesB2W = 0
+  let newCaptivesW2B = 0
 
   for (let i = 0; i < gameBoard.length; i++) {
     for (let j = 0; j < gameBoard.length; j++) {
       // On shadowBoard, empty string at this stage means we have confirmed they do not have liberties
       if (shadowBoard[i][j] == "") {
+        if (gameBoard[i][j] === blackLetter){
+          newCaptivesB2W += 1;
+          setGameScore({...gameScore, blackStonesLostToWhite:(gameScore.blackStonesLostToWhite+newCaptivesB2W)})
+        }
+        else if (gameBoard[i][j] === whiteLetter){
+          newCaptivesW2B += 1
+          setGameScore({...gameScore, whiteStonesLostToBlack:(gameScore.whiteStonesLostToBlack+newCaptivesW2B)})
+        }
         newGameBoard[i][j] = emptyLetter;
       }
     }
   }
+
+  // This is where I would expect to place the setGameScore function, but for some reason it causes
+  // an infinite re-render loop. M
+  // setGameScore({
+  //   ...gameScore, 
+  //   // blackStonesLostToWhite:(gameScore.blackStonesLostToWhite+newCaptivesB2W),
+  //   // whiteStonesLostToBlack:(gameScore.whiteStonesLostToBlack+newCaptivesW2B),
+  //  })
   return newGameBoard;
 };
 
@@ -268,11 +295,6 @@ const assessInfluenceAcrossBoard = ({
       // If the tile has a stone on it, assign local, cardinal, inter, super influences
       if (gameBoard[i][j] === blackLetter || gameBoard[i][j] === whiteLetter) {
         addToCell(newInfluenceBoard, i, j, localInfluence, isPositive);
-
-        // if(validTile(newInfluenceBoard, i+1 , j)){newInfluenceBoard[i+1][j] += cardinalInfluence }
-        // if(validTile(newInfluenceBoard, i-1 , j)){newInfluenceBoard[i-1][j] += cardinalInfluence }
-        // if(validTile(newInfluenceBoard, i , j+1)){newInfluenceBoard[i][j+1] += cardinalInfluence }
-        // if(validTile(newInfluenceBoard, i , j-1)){newInfluenceBoard[i][-1] += cardinalInfluence }
 
         addToCell(newInfluenceBoard, i + 1, j, cardinalInfluence, isPositive);
         addToCell(newInfluenceBoard, i - 1, j, cardinalInfluence, isPositive);
@@ -432,7 +454,7 @@ type WinState = {
   winner: string | null;
 };
 
-export const checkWinCondition = (board: typeof startingBoard): WinState => {
+export const checkWinCondition = (board: TextBoard): WinState => {
   // Enter Win Conditions here
   //
   //
@@ -486,6 +508,30 @@ const NextPlayerMessage = ({ bIsNext }: { bIsNext: boolean }) => {
     </div>
   );
 };
+
+const ShowInfluenceToggle = ({ userSettings, setUserSettings }: { userSettings: UserSettings, setUserSettings: Function}) => {
+  return (
+    <label className="inline-flex items-center cursor-pointer">
+    <input
+      type="checkbox"
+      value={userSettings.showInfluence.toString()}
+      className="sr-only peer"
+      onChange={() =>
+        setUserSettings({
+          ...userSettings,
+          showInfluence: !userSettings.showInfluence,
+        })
+      }
+    />
+    <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+    <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+      Show influence
+    </span>
+  </label>
+  );
+};
+
+
 
 const ShowTile = ({
   rowNum,
@@ -639,13 +685,15 @@ const RefreshButton = ({
   setBoard,
   setBIsNext,
   setPassCount,
+  boardSize,
 }: {
   setBoard: Function;
   setBIsNext: Function;
   setPassCount: Function;
+  boardSize: number
 }) => {
   const refreshBoard = () => {
-    setBoard(startingBoard);
+    setBoard(textBoardGenerator(boardSize, emptyLetter));
     setBIsNext(true);
     setPassCount(0);
   };
@@ -656,6 +704,16 @@ const RefreshButton = ({
     </div>
   );
 };
+
+const ShowScore = ({gameScore} : {gameScore: GameScore}) => {
+  return(
+    <div>
+      Black has captured: {gameScore.whiteStonesLostToBlack} stones
+      <br />
+      White has captured: {gameScore.blackStonesLostToWhite} stones
+    </div>
+  )
+}
 
 const ShowResults = ({
   outcome,
@@ -677,42 +735,79 @@ const ShowResults = ({
   } else return null;
 };
 
-type UserSettings = {
+export type UserSettings = {
   showInfluence: boolean
+  boardSize: "Small" | "Medium" | "Large"
+  dropDownHidden: boolean
+  prodBoardLength: number
 }
 
+type GameScore = {
+  blackStonesLostToWhite: number
+  whiteStonesLostToBlack: number
+}
 
 function App() {
   console.log("==== APP REFRESH ====");
-  const [board, setBoard] = useState(structuredClone(startingBoard));
-  const [bIsNext, setBIsNext] = useState(true);
-  const [passCount, setPassCount] = useState(0);
+
   const [userSettings, setUserSettings] = useState<UserSettings>({
     showInfluence: false,
+    boardSize: "Medium",
+    dropDownHidden: true,
+    prodBoardLength: 13,
   });
+
+
+  const boardLengthDict = {
+    Small: 9,
+    Medium: 13,
+    Large: 19,
+    // Any new values here will also need to be added to UserSettings type
+  }
+
+  console.log(boardLengthDict[userSettings.boardSize])
+
+  useEffect(()=>{
+      setBoard(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter));
+      setBIsNext(true);
+      setPassCount(0);
+    console.log('board size changed!')
+  },[userSettings.boardSize])
+
+  const [board, setBoard] = useState(structuredClone(textBoardGenerator(userSettings.prodBoardLength, emptyLetter)));
+  const [bIsNext, setBIsNext] = useState(true);
+  const [passCount, setPassCount] = useState(0);
+  const [gameScore, setGameScore] = useState<GameScore>({
+    blackStonesLostToWhite: 0,
+    whiteStonesLostToBlack: 0
+  })
 
   // We don't need to run our heavy algos if a user has just passed
   if (passCount === 0) {
     // We run this once where we treat the player who just moved as "Safe"
     const freshShadowBoard = assessLibertyAcrossBoard({
       gameBoard: board,
-      shadowBoard: startingShadowBoard,
+      shadowBoard: textBoardGenerator(userSettings.prodBoardLength, ""),
       focusOnBlack: bIsNext,
     });
     const freshGameBoard = removeCapturedStones({
       gameBoard: board,
       shadowBoard: freshShadowBoard,
+      gameScore: gameScore,
+      setGameScore: setGameScore,
     });
 
     // Then we run it again to assess for suicides
     const freshShadowBoard2 = assessLibertyAcrossBoard({
       gameBoard: freshGameBoard,
-      shadowBoard: startingShadowBoard,
+      shadowBoard: textBoardGenerator(userSettings.prodBoardLength, ""),
       focusOnBlack: !bIsNext,
     });
     const freshGameBoard2 = removeCapturedStones({
       gameBoard: freshGameBoard,
       shadowBoard: freshShadowBoard2,
+      gameScore: gameScore,
+      setGameScore: setGameScore,
     });
 
     if (JSON.stringify(board) != JSON.stringify(freshGameBoard2)) {
@@ -733,30 +828,26 @@ function App() {
 
   const influence = assessInfluenceAcrossBoard({
     gameBoard: board,
-    influenceBoard: startingInfluenceBoard,
+    influenceBoard: numberBoardGenerator(userSettings.prodBoardLength, 0),
   });
   console.log(influence);
 
   return (
     <>
       <NextPlayerMessage bIsNext={bIsNext} />
-      <label className="inline-flex items-center cursor-pointer">
-        <input
-          type="checkbox"
-          value={userSettings.showInfluence.toString()}
-          className="sr-only peer"
-          onChange={() =>
-            setUserSettings({
-              ...userSettings,
-              showInfluence: !userSettings.showInfluence,
-            })
-          }
-        />
-        <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-        <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-          Show influence
-        </span>
-      </label>
+
+      <ShowInfluenceToggle 
+        userSettings={userSettings}
+        setUserSettings={setUserSettings}
+      />
+      <br />
+      <SizeDropdown
+        userSettings={userSettings}
+        setUserSettings={setUserSettings}
+      />
+
+
+      <ShowScore gameScore={gameScore}/>
 
       <ShowBoard
         board={board}
@@ -778,12 +869,14 @@ function App() {
         setBoard={setBoard}
         setBIsNext={setBIsNext}
         setPassCount={setPassCount}
+        boardSize={userSettings.prodBoardLength}
       />
 
       <ShowResults
         outcome={currentWinState.outcome}
         winner={currentWinState.winner}
       />
+
     </>
   );
 }
@@ -793,6 +886,7 @@ export default App;
 //
 // COMING UP NEXT
 //
+// Replace the boardsizenumber with boardLengthDict[userSettings.boardSize]
 // Count captured pieces somewhere
 // End of game scoring
 // Display captured pieces on sides

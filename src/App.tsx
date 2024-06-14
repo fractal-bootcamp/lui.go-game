@@ -93,11 +93,11 @@ const neighbourString = (board: TextBoard, i: number, j: number) => {
 
 const assessLibertyAcrossBoard = ({
   gameBoard,
-  shadowBoard,
+  libertyBoard,
   focusOnBlack,
 }: {
   gameBoard: TextBoard;
-  shadowBoard: TextBoard;
+  libertyBoard: TextBoard;
   focusOnBlack: boolean;
 }): TextBoard => {
   // After Black moves, we assess White's stones first, and then assess Black's (to assess for suicides)
@@ -106,28 +106,28 @@ const assessLibertyAcrossBoard = ({
 
   const safeLetter = focusOnBlack ? whiteLetter : blackLetter;
 
-  // This must take in both the gameBoard and the shadowBoard because it is recursive
-  // and state of the shadowBoard changes at different levels of recursion
+  // This must take in both the gameBoard and the libertyBoard because it is recursive
+  // and state of the libertyBoard changes at different levels of recursion
 
-  const newShadowBoard = structuredClone(shadowBoard);
+  const newLibertyBoard = structuredClone(libertyBoard);
 
   for (let i = 0; i < gameBoard.length; i++) {
     for (let j = 0; j < gameBoard.length; j++) {
       // Check and skip anything that has already been assessed has having Liberty
       console.log("ij:",i,j)
-      if (newShadowBoard[i][j] == "hasLiberty") {
+      if (newLibertyBoard[i][j] == "hasLiberty") {
         null;
       }
 
       // Any empty squares effectively have Liberty
       else if (gameBoard[i][j] == emptyLetter) {
-        newShadowBoard[i][j] = "hasLiberty";
+        newLibertyBoard[i][j] = "hasLiberty";
       }
 
       // Every time we run this function one player is treated as "Safe"
       // Let's just pretend here their pieces enjoy liberty
       else if (gameBoard[i][j] == safeLetter) {
-        newShadowBoard[i][j] = "hasLiberty";
+        newLibertyBoard[i][j] = "hasLiberty";
       }
 
       // For non-empty spaces, we want to know what lives in the neighouring spaces
@@ -136,7 +136,7 @@ const assessLibertyAcrossBoard = ({
 
         // If one of those spaces is empty, you have Liberty
         if (neighbours.includes(emptyLetter)) {
-          newShadowBoard[i][j] = "hasLiberty";
+          newLibertyBoard[i][j] = "hasLiberty";
         }
 
         // If you're the most recently placed stone
@@ -148,53 +148,53 @@ const assessLibertyAcrossBoard = ({
         // Let's check North
         else if (
           checkCell(gameBoard, i - 1, j) === gameBoard[i][j] &&
-          checkCell(newShadowBoard, i - 1, j) === "hasLiberty"
+          checkCell(newLibertyBoard, i - 1, j) === "hasLiberty"
         ) {
-          newShadowBoard[i][j] = "hasLiberty";
+          newLibertyBoard[i][j] = "hasLiberty";
         }
         // Let's check South
         else if (
           checkCell(gameBoard, i + 1, j) === gameBoard[i][j] &&
-          checkCell(newShadowBoard, i + 1, j) === "hasLiberty"
+          checkCell(newLibertyBoard, i + 1, j) === "hasLiberty"
         ) {
-          newShadowBoard[i][j] = "hasLiberty";
+          newLibertyBoard[i][j] = "hasLiberty";
         }
         // Let's check West
         else if (
           checkCell(gameBoard, i, j - 1) === gameBoard[i][j] &&
-          checkCell(newShadowBoard, i, j - 1) === "hasLiberty"
+          checkCell(newLibertyBoard, i, j - 1) === "hasLiberty"
         ) {
-          newShadowBoard[i][j] = "hasLiberty";
+          newLibertyBoard[i][j] = "hasLiberty";
         }
         // Let's check East
         else if (
           checkCell(gameBoard, i, j + 1) === gameBoard[i][j] &&
-          checkCell(newShadowBoard, i, j + 1) === "hasLiberty"
+          checkCell(newLibertyBoard, i, j + 1) === "hasLiberty"
         ) {
-          newShadowBoard[i][j] = "hasLiberty";
+          newLibertyBoard[i][j] = "hasLiberty";
         }
       }
     }
   }
   console.log("Recursive function called: assessLibertyAcrossBoard");
-  if (JSON.stringify(shadowBoard) != JSON.stringify(newShadowBoard)) {
-    const newNewShadowBoard = assessLibertyAcrossBoard({
+  if (JSON.stringify(libertyBoard) != JSON.stringify(newLibertyBoard)) {
+    const newNewLibertyBoard = assessLibertyAcrossBoard({
       gameBoard: gameBoard,
-      shadowBoard: newShadowBoard,
+      libertyBoard: newLibertyBoard,
       focusOnBlack: focusOnBlack,
     });
-    return newNewShadowBoard;
-  } else return newShadowBoard;
+    return newNewLibertyBoard;
+  } else return newLibertyBoard;
 };
 
 const removeCapturedStones = ({
   gameBoard,
-  shadowBoard,
+  libertyBoard,
   gameScore,
   setGameScore,
 }: {
   gameBoard: TextBoard;
-  shadowBoard: TextBoard;
+  libertyBoard: TextBoard;
   gameScore: GameScore;
   setGameScore: Function;
 }): TextBoard => {
@@ -205,8 +205,8 @@ const removeCapturedStones = ({
 
   for (let i = 0; i < gameBoard.length; i++) {
     for (let j = 0; j < gameBoard.length; j++) {
-      // On shadowBoard, empty string at this stage means we have confirmed they do not have liberties
-      if (shadowBoard[i][j] == "") {
+      // On libertyBoard, empty string at this stage means we have confirmed they do not have liberties
+      if (libertyBoard[i][j] == "") {
         if (gameBoard[i][j] === blackLetter){
           newCaptivesB2W += 1;
           setGameScore({...gameScore, blackStonesLostToWhite:(gameScore.blackStonesLostToWhite+newCaptivesB2W)})
@@ -638,7 +638,6 @@ export type UserSettings = {
   showInfluence: boolean
   boardSize: "Small" | "Medium" | "Large"
   dropDownHidden: boolean
-  // prodBoardLength: number
 }
 
 type GameScore = {
@@ -660,25 +659,12 @@ function App() {
     showInfluence: false,
     boardSize: "Small",
     dropDownHidden: true,
-    // prodBoardLength: 13,
   });
-
-
-
- 
-
-  // Ignore the usersettings prodBoardLength, use boardLengthDict[userSettings.boardSize] instead
-
-  console.log(boardLengthDict[userSettings.boardSize])
-
-
-
-
  
   useEffect(()=> {
     setBoard(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter))
     setBIsNext(true);
-},[userSettings.boardSize])
+  },[userSettings.boardSize])
 
   const [board, setBoard] = useState(structuredClone(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)));
   const [bIsNext, setBIsNext] = useState(true);
@@ -692,27 +678,27 @@ function App() {
   // We don't need to run our heavy algos if a user has just passed
   if (passCount === 0) {
     // We run this once where we treat the player who just moved as "Safe"
-    const freshShadowBoard = assessLibertyAcrossBoard({
+    const freshLibertyBoard = assessLibertyAcrossBoard({
       gameBoard: board,
-      shadowBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
+      libertyBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
       focusOnBlack: bIsNext,
     });
     const freshGameBoard = removeCapturedStones({
       gameBoard: board,
-      shadowBoard: freshShadowBoard,
+      libertyBoard: freshLibertyBoard,
       gameScore: gameScore,
       setGameScore: setGameScore,
     });
 
     // Then we run it again to assess for suicides
-    const freshShadowBoard2 = assessLibertyAcrossBoard({
+    const freshLibertyBoard2 = assessLibertyAcrossBoard({
       gameBoard: freshGameBoard,
-      shadowBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
+      libertyBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
       focusOnBlack: !bIsNext,
     });
     const freshGameBoard2 = removeCapturedStones({
       gameBoard: freshGameBoard,
-      shadowBoard: freshShadowBoard2,
+      libertyBoard: freshLibertyBoard2,
       gameScore: gameScore,
       setGameScore: setGameScore,
     });
@@ -740,7 +726,6 @@ function App() {
     influenceBoard: numberBoardGenerator(board.length, 0),
     recursionCount: 0,
   });
-  console.log(influence);
 
   return (
     <>
@@ -751,8 +736,6 @@ function App() {
         setUserSettings={setUserSettings}
       />
       <br />
-
-
 
       <ShowScore gameScore={gameScore}/>
 

@@ -730,6 +730,7 @@ function App() {
   const influence = assessInfluenceAcrossBoard({
     gameBoard: board,
     influenceBoard: numberBoardGenerator(userSettings.prodBoardLength, 0),
+    recursionCount: 0,
   });
   console.log(influence);
 
@@ -787,6 +788,7 @@ export default App;
 //
 // COMING UP NEXT
 //
+// Fix the Influence algorithm so that it's rotationally balanced (assessments need to be made off older version of influence board)
 // Replace the boardsizenumber with boardLengthDict[userSettings.boardSize]
 // Count captured pieces somewhere
 // End of game scoring

@@ -94,10 +94,6 @@ const ShowTile = ({
   setGame,
   rowNum,
   colNum,
-  board,
-  setBoard,
-  bIsNext,
-  setBIsNext,
   influence,
   userSettings,
 }: {
@@ -105,10 +101,6 @@ const ShowTile = ({
   setGame: Function;
   rowNum: number;
   colNum: number;
-  board: string[][];
-  setBoard: Function;
-  bIsNext: boolean;
-  setBIsNext: Function;
   influence: number[][];
   userSettings: UserSettings;
 }) => {
@@ -138,10 +130,11 @@ const ShowTile = ({
   const sharedClassName = `flex flex-col w-10 h-10 rounded-sm m-1 p-2 font-bold ${tileBGColor}`;
   const nullClass = "text-gray-500 cursor-pointer";
 
+  const board = game.gameBoard
+  const bIsNext = game.bIsNext
+
   const makeMove = () => {
     const newBoard = addNewStone(board, rowNum, colNum, bIsNext)
-    setBoard(newBoard);
-    setBIsNext(!bIsNext);
 
     setGame({...game, gameBoard: newBoard, bIsNext: !bIsNext})
   };
@@ -180,19 +173,11 @@ const ShowTile = ({
 const ShowBoard = ({
   game,
   setGame,
-  board,
-  setBoard,
-  bIsNext,
-  setBIsNext,
   influence,
   userSettings,
 }: {
   game: Game;
   setGame: Function;
-  board: string[][];
-  setBoard: Function;
-  bIsNext: boolean;
-  setBIsNext: Function;
   influence: number[][];
   userSettings: UserSettings;
 }) => {
@@ -200,7 +185,7 @@ const ShowBoard = ({
 
   return (
     <>
-      {board.map((rowArray, rowIndex) => {
+      {game.gameBoard.map((rowArray, rowIndex) => {
         return (
           <div className={sharedRowClassName}>
             {rowArray.map(
@@ -211,10 +196,6 @@ const ShowBoard = ({
                   setGame={setGame}
                   rowNum={rowIndex}
                   colNum={colIndex}
-                  board={board}
-                  setBoard={setBoard}
-                  bIsNext={bIsNext}
-                  setBIsNext={setBIsNext}
                   influence={influence}
                   userSettings={userSettings}
                 />
@@ -229,57 +210,25 @@ const ShowBoard = ({
 
 const buttonStyling = "p-5";
 
-const PassButton = ({
-  bIsNext,
-  setBIsNext,
-  passCount,
-  setPassCount,
-}: {
-  bIsNext: boolean;
-  setBIsNext: Function;
-  passCount: number;
-  setPassCount: Function;
-}) => {
-  const onPass = () => {
-    setPassCount(passCount + 1);
-    setBIsNext(!bIsNext);
-  };
+
+const refreshBoard = ( game: Game, setGame: Function, userSettings: UserSettings ) => {
+  const newBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
+  setGame({...game, gameBoard: newBoard, bIsNext: true, passCount: 0 })
+}
+
+const voluntaryPass = ( game: Game, setGame: Function ) => {
+  setGame({...game, bIsNext: !game.bIsNext, passCount: game.passCount+1})
+}
+
+
+const ActionButton = ({ text, action } : { text: string, action : Function } ) => {
   return (
     <div className={buttonStyling}>
-      <button onClick={() => onPass()}>Pass</button>
+      <button onClick={() => action()}>{text}</button>
     </div>
   );
 };
 
-const RefreshButton = ({
-  game,
-  setGame,
-  setBoard,
-  setBIsNext,
-  setPassCount,
-  boardSize,
-}: {
-  game: Game
-  setGame: Function
-  setBoard: Function;
-  setBIsNext: Function;
-  setPassCount: Function;
-  boardSize: number
-}) => {
-  const refreshBoard = () => {
-    const newBoard = textBoardGenerator(boardSize, emptyLetter)
-    setBoard(newBoard);
-    setBIsNext(true);
-    setPassCount(0);
-    setGame({...game, gameBoard: newBoard, bIsNext: true, passCount: 0})
-  };
-
-  return (
-    <div className={buttonStyling}>
-      <button onClick={() => refreshBoard()}>Start again</button>
-    </div>
-  );
-};
 
 const ShowScore = ({gameScore} : {gameScore: GameScore}) => {
   return(
@@ -337,20 +286,22 @@ function App() {
   console.log("passcount on reload", soloGame.passCount)
 
   useEffect(()=> {
-    setBoard(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter))
-    setBIsNext(true);
+    const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
+    setSoloGame({...soloGame, gameBoard: freshBoard, bIsNext: true})
+
   },[userSettings.boardSize])
 
 
 
-  const [board, setBoard] = useState(structuredClone(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)));
-  const [bIsNext, setBIsNext] = useState(true);
-  const [passCount, setPassCount] = useState(0);
 
 
   useEffect(()=> {
     console.log("removing")
-    removeCapturedStones(soloGame,setSoloGame)
+    removeCapturedStones(soloGame,()=>{})
+
+    // const updatedGame = removeCapturedStones(soloGame)
+    // setSoloGame(updatedGame)
+
     },[soloGame.gameBoard])
 
 
@@ -368,8 +319,8 @@ function App() {
   // size of influence board in this function is pegged to the version of board in State
   // because State sometimes lags slightly behind
   const influence = assessInfluenceAcrossBoard({
-    gameBoard: board,
-    influenceBoard: numberBoardGenerator(board.length, 0),
+    gameBoard: soloGame.gameBoard,
+    influenceBoard: numberBoardGenerator(soloGame.gameBoard.length, 0),
     recursionCount: 0,
   });
 
@@ -388,20 +339,15 @@ function App() {
       <ShowBoard
         game={soloGame}
         setGame={setSoloGame}
-        board={soloGame.gameBoard}
-        setBoard={setBoard}
-        bIsNext={bIsNext}
-        setBIsNext={setBIsNext}
         influence={influence}
         userSettings={userSettings}
       />
 
-      <PassButton
-        bIsNext={soloGame.bIsNext}
-        setBIsNext={setBIsNext}
-        passCount={soloGame.passCount}
-        setPassCount={setPassCount}
+      <ActionButton
+        text="Pass"
+        action={()=>voluntaryPass(soloGame, setSoloGame)}
       />
+
       <SizeDropdown
         userSettings={userSettings}
         setUserSettings={setUserSettings}
@@ -409,14 +355,7 @@ function App() {
         settingOptions={["Small", "Medium", "Large"]}
       />
 
-      <RefreshButton
-        game = {soloGame}
-        setGame={setSoloGame}
-        setBoard={setBoard}
-        setBIsNext={setBIsNext}
-        setPassCount={setPassCount}
-        boardSize={boardLengthDict[userSettings.boardSize]}
-      />
+      <ActionButton text= "Start again" action={() => refreshBoard(soloGame, setSoloGame, userSettings)} />
 
       {/* <ShowResults
         outcome={currentWinState.outcome}

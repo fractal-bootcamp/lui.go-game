@@ -9,6 +9,7 @@ export const SettingDropdown = ({ userSettings, setUserSettings, settingKey, set
     }
   
     const handleSelect = (selection: string) => {
+      console.log({...userSettings, [settingKey]: selection })
       setUserSettings( {...userSettings, [settingKey]: selection })
     }
 

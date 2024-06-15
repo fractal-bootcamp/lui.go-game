@@ -316,11 +316,22 @@ function App() {
     // }, 1000);
   }, [game.moveCount]);
 
+  // If you change the board size, we want a fresh board
   useEffect(()=> {
     const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
     setGame({...game, board: freshBoard, bIsNext: true})
-
   },[userSettings.boardSize])
+
+  // If you switch between solo and server play mode, we
+  // want to refresh all the components. Currently doing
+  // this in a hacky way.
+  
+  useEffect(()=> {
+    setSoloGame({...soloGame})
+    setServerGame({...serverGame})
+    setUserSettings({...userSettings})
+    console.log("playMode", userSettings)
+  },[userSettings.playMode])
 
   useEffect(()=> {
     const updatedGame = removeCapturedStones(game)

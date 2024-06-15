@@ -11,6 +11,7 @@ import {
 import {
   addNewStone,
   removeCapturedStonesOneCycle,
+  removeCapturedStones,
 } from "../shared/BoardUpdaters"
 
 
@@ -28,7 +29,9 @@ import {
   whiteLetter,
   emptyLetter,
   boardLengthDict,
-  GameScore
+  Game,
+  GameScore,
+  exampleGame
 } from "../shared/constants"
 
 
@@ -90,6 +93,8 @@ const ShowInfluenceToggle = ({ userSettings, setUserSettings }: { userSettings: 
 
 
 const ShowTile = ({
+  game,
+  setGame,
   rowNum,
   colNum,
   board,
@@ -99,6 +104,8 @@ const ShowTile = ({
   influence,
   userSettings,
 }: {
+  game: Game;
+  setGame: Function;
   rowNum: number;
   colNum: number;
   board: string[][];
@@ -135,8 +142,11 @@ const ShowTile = ({
   const nullClass = "text-gray-500 cursor-pointer";
 
   const makeMove = () => {
-    setBoard(addNewStone(board, rowNum, colNum, bIsNext));
+    const newBoard = addNewStone(board, rowNum, colNum, bIsNext)
+    setBoard(newBoard);
     setBIsNext(!bIsNext);
+
+    setGame({...game, gameBoard: newBoard, bIsNext: !bIsNext})
   };
 
   if (board[rowNum][colNum] === blackLetter) {
@@ -171,6 +181,8 @@ const ShowTile = ({
 };
 
 const ShowBoard = ({
+  game,
+  setGame,
   board,
   setBoard,
   bIsNext,
@@ -178,6 +190,8 @@ const ShowBoard = ({
   influence,
   userSettings,
 }: {
+  game: Game;
+  setGame: Function;
   board: string[][];
   setBoard: Function;
   bIsNext: boolean;
@@ -196,6 +210,8 @@ const ShowBoard = ({
               // if have a  declared value and you don't intend to ever call it, give it an underscore
               (_cell, colIndex) => (
                 <ShowTile
+                  game={game}
+                  setGame={setGame}
                   rowNum={rowIndex}
                   colNum={colIndex}
                   board={board}
@@ -239,20 +255,26 @@ const PassButton = ({
 };
 
 const RefreshButton = ({
+  game,
+  setGame,
   setBoard,
   setBIsNext,
   setPassCount,
   boardSize,
 }: {
+  game: Game
+  setGame: Function
   setBoard: Function;
   setBIsNext: Function;
   setPassCount: Function;
   boardSize: number
 }) => {
   const refreshBoard = () => {
-    setBoard(textBoardGenerator(boardSize, emptyLetter));
+    const newBoard = textBoardGenerator(boardSize, emptyLetter)
+    setBoard(newBoard);
     setBIsNext(true);
     setPassCount(0);
+    setGame({...game, gameBoard: newBoard, bIsNext: true, passCount: 0})
   };
 
   return (
@@ -313,6 +335,8 @@ function App() {
     singlePlayer: true
   });
  
+  const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
+
   useEffect(()=> {
     setBoard(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter))
     setBIsNext(true);
@@ -328,6 +352,9 @@ function App() {
     whiteStonesLostToBlack: 0
   })
 
+
+  removeCapturedStones(soloGame,setSoloGame,setGameScore)
+
   // We don't need to run our heavy algos if a user has just passed
   if (passCount === 0 && boardLengthDict[userSettings.boardSize] === board.length) {
     // We run this once where we treat the player who just moved as "Safe"
@@ -337,6 +364,8 @@ function App() {
       focusOnBlack: bIsNext,
     });
     const freshGameBoard = removeCapturedStonesOneCycle({
+      game: soloGame,
+      setGame: setSoloGame,
       gameBoard: board,
       libertyBoard: freshLibertyBoard,
       gameScore: gameScore,
@@ -350,6 +379,8 @@ function App() {
       focusOnBlack: !bIsNext,
     });
     const freshGameBoard2 = removeCapturedStonesOneCycle({
+      game: soloGame,
+      setGame: setSoloGame,
       gameBoard: freshGameBoard,
       libertyBoard: freshLibertyBoard2,
       gameScore: gameScore,
@@ -362,15 +393,15 @@ function App() {
     }
   }
   
-  let currentWinState = checkWinCondition(board);
+  // let currentWinState = checkWinCondition(board);
 
-  if (passCount > 1) {
-    currentWinState = {
-      // dummy date for now
-      outcome: "WIN",
-      winner: blackString,
-    };
-  }
+  // if (passCount > 1) {
+  //   currentWinState = {
+  //     // dummy date for now
+  //     outcome: "WIN",
+  //     winner: blackString,
+  //   };
+  // }
 
   // size of influence board in this function is pegged to the version of board in State
   // because State sometimes lags slightly behind
@@ -382,7 +413,7 @@ function App() {
 
   return (
     <>
-      <NextPlayerMessage bIsNext={bIsNext} />
+      <NextPlayerMessage bIsNext={soloGame.bIsNext} />
 
       <ShowInfluenceToggle 
         userSettings={userSettings}
@@ -390,10 +421,12 @@ function App() {
       />
       <br />
 
-      <ShowScore gameScore={gameScore}/>
+      <ShowScore gameScore={soloGame.gameScore}/>
 
       <ShowBoard
-        board={board}
+        game={soloGame}
+        setGame={setSoloGame}
+        board={soloGame.gameBoard}
         setBoard={setBoard}
         bIsNext={bIsNext}
         setBIsNext={setBIsNext}
@@ -402,9 +435,9 @@ function App() {
       />
 
       <PassButton
-        bIsNext={bIsNext}
+        bIsNext={soloGame.bIsNext}
         setBIsNext={setBIsNext}
-        passCount={passCount}
+        passCount={soloGame.passCount}
         setPassCount={setPassCount}
       />
       <SizeDropdown
@@ -415,16 +448,18 @@ function App() {
       />
 
       <RefreshButton
+        game = {soloGame}
+        setGame={setSoloGame}
         setBoard={setBoard}
         setBIsNext={setBIsNext}
         setPassCount={setPassCount}
         boardSize={boardLengthDict[userSettings.boardSize]}
       />
 
-      <ShowResults
+      {/* <ShowResults
         outcome={currentWinState.outcome}
         winner={currentWinState.winner}
-      />
+      /> */}
 
     </>
   );

@@ -67,8 +67,6 @@ export const assessLibertyAcrossBoard = ({
   libertyBoard: string[][];
   focusOnBlack: boolean;
 }): string[][] => {
-  console.log(gameBoard.length);
-  console.log(libertyBoard.length);
   // After Black moves, we assess White's stones first, and then assess Black's (to assess for suicides)
   // So each time we run this function we focus on a single Player
   // If we're not focusing on the Player, we treat all their pieces as being safe, i.e. "hasLiberty"

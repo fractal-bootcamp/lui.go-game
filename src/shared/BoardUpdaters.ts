@@ -7,8 +7,6 @@ import {
 
 import { assessLiberty } from "../shared/BoardAssessors";
 
-import { textBoardGenerator } from "./ArrayGenerator";
-
 export const addNewStone = (
   game: Game,
   rowNum: number,
@@ -110,7 +108,13 @@ export const removeCaptures = ({
       }
     }
   }
-  const updatedGame = { ...game, board: newBoard };
+  const newGameScore = {
+    blackStonesLostToWhite:
+      game.gameScore.blackStonesLostToWhite + newCaptivesB2W,
+    whiteStonesLostToBlack:
+      game.gameScore.whiteStonesLostToBlack + newCaptivesW2B,
+  };
+  const updatedGame = { ...game, board: newBoard, gameScore: newGameScore };
   /// ADD IN HERE THE SCORE...
   return updatedGame;
 };

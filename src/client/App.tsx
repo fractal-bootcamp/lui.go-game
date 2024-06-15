@@ -3,14 +3,11 @@ import { useEffect, useState } from "react";
 import { SizeDropdown } from "./DropDown";
 
 import {
-  checkWinCondition,
-  assessLibertyAcrossBoard,
   assessInfluenceAcrossBoard
 } from "../shared/BoardAssessors"
 
 import {
   addNewStone,
-  removeCapturedStonesOneCycle,
   removeCapturedStones,
 } from "../shared/BoardUpdaters"
 
@@ -435,6 +432,8 @@ export default App;
 //
 // COMING UP NEXT
 //
+// Get rid of setBoard etc
+// pull setGame out of the Updater.ts functions
 // Reusable DropDown
 // Add Multiplayer option to UserSettings
 // Start passing Game object that includes board, rather than smaller object

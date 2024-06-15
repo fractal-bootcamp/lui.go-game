@@ -3,7 +3,7 @@ import cors from "cors";
 
 import { Game, exampleGame } from "../shared/constants";
 
-import { updateGameWithMove } from "../shared/BoardUpdaters";
+// import { updateGameWithMove } from "../shared/BoardUpdaters";
 
 import { textBoardGenerator } from "../shared/ArrayGenerator";
 
@@ -69,7 +69,7 @@ app.post("/game/:id/reset", (req, res) => {
     return res.status(404).send("Game not found (POST /reset)");
   }
 
-  game.gameBoard = structuredClone(textBoardGenerator(9, "E"));
+  game.board = structuredClone(textBoardGenerator(9, "E"));
   // ADD IN WINSTATE HERE LATER
   game.bIsNext = true;
 

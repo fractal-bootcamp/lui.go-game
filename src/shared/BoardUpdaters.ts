@@ -2,134 +2,110 @@ import {
   blackLetter,
   whiteLetter,
   emptyLetter,
-  GameScore,
   Game,
 } from "../shared/constants";
 
-import { assessLibertyAcrossBoard } from "../shared/BoardAssessors";
+import { assessLiberty } from "../shared/BoardAssessors";
 
 import { textBoardGenerator } from "./ArrayGenerator";
 
 export const addNewStone = (
-  board: string[][],
+  game: Game,
   rowNum: number,
-  colNum: number,
-  bIsNext: boolean
-): string[][] => {
+  colNum: number
+): Game => {
   // This takes in a game board state and a move
   // and returns an updated board with that move incorporated
-  const newBoard = structuredClone(board);
-  if (board[rowNum][colNum] != emptyLetter) {
-    console.log("ERROR: getUpdatedBoard attempted on occupied tile.");
+  const oldBoard = game.board;
+  const newBoard = structuredClone(oldBoard);
+  if (oldBoard[rowNum][colNum] != emptyLetter) {
+    console.log("ERROR: addNewStone attempted on occupied tile.");
   }
-  newBoard[rowNum][colNum] = bIsNext ? blackLetter : whiteLetter;
-  return newBoard;
+  newBoard[rowNum][colNum] = game.bIsNext ? blackLetter : whiteLetter;
+
+  const updatedGame = { ...game, gameBoard: newBoard, bIsNext: !game.bIsNext };
+
+  return updatedGame;
 };
 
-export const removeCapturedStonesOneCycle = ({
+//
+// buttonClick triggers addNewStone, which lays a stone and toggles bIsNext
+//
+// game, move details -> addNewStone -> game
+//
+
+// The change in game.board triggers useEffect, which hands the game state
+// to removeCapturedStones, which will respond with a new game state. This
+// new game state will then be set as THE game state.
+
+// Within removeCapturedStones, we pass the game state for assessment, and
+// then for kills, then for assessment again, and then for kills again.
+//
+// Assessment is handled by assessLiberty. This is recursive so it needs to
+// be handed a blank board to start with.
+//
+// Kills are handled by removeCaptures.
+
+// So we have:
+
+// game ->
+// - removeCapturedStones
+// -- 1 - assessLiberty(game, focusOnBlack boolean) -> libertyAssessment
+// -- 2 - removeCaptures(game, libertyAssessment) -> game
+// -- 3 - assessLiberty(game, !focusOnBlack boolean) -> libertyAssessment
+// -- 4 - removeCaptures(game, libertyAssessment) -> game
+// -> game
+
+export const removeCapturedStones = (game: Game): Game => {
+  // We don't need to run this algo if a user has just passed
+  if (game.passCount > 0) return game;
+
+  // Phase 1, assess liberty, with the player who just moved as "Safe"
+  const libertyBoard = assessLiberty(game, game.bIsNext);
+  const updatedGamePass1 = removeCaptures({
+    game: game,
+    libertyBoard: libertyBoard,
+  });
+
+  // Then we run it again to assess for suicides
+  const libertyBoard2 = assessLiberty(updatedGamePass1, game.bIsNext);
+  const updatedGamePass2 = removeCaptures({
+    game: updatedGamePass1,
+    libertyBoard: libertyBoard2,
+  });
+
+  if (JSON.stringify(game.board) != JSON.stringify(updatedGamePass2.board)) {
+    console.log("Stone(s) have been captured.");
+  }
+  return updatedGamePass2;
+};
+
+export const removeCaptures = ({
   game,
-  setGame,
-  gameBoard,
   libertyBoard,
-  gameScore,
 }: {
   game: Game;
-  setGame: Function;
-  gameBoard: string[][];
   libertyBoard: string[][];
-  gameScore: GameScore;
-}): string[][] => {
-  const newGameBoard = structuredClone(game.gameBoard);
-
+}): Game => {
   let newCaptivesB2W = 0;
   let newCaptivesW2B = 0;
 
-  for (let i = 0; i < game.gameBoard.length; i++) {
-    for (let j = 0; j < game.gameBoard.length; j++) {
-      // On libertyBoard, empty string at this stage means we have confirmed they do not have liberties
+  const newBoard = structuredClone(game.board);
+
+  for (let i = 0; i < game.board.length; i++) {
+    for (let j = 0; j < game.board.length; j++) {
+      // On libertyBoard, empty string at this stage means we have confirmed they do NOT have liberties
       if (libertyBoard[i][j] == "") {
-        if (game.gameBoard[i][j] === blackLetter) {
+        if (game.board[i][j] === blackLetter) {
           newCaptivesB2W += 1;
-          //   const newGameScore = {
-          //     ...game.gameScore,
-          //     blackStonesLostToWhite: game.gameScore.blackStonesLostToWhite + 1,
-          //   };
-          //   console.log(newCaptivesB2W, "black stones captured");
-
-          //   setGame({
-          //     ...game,
-          //     passCount: 999999999,
-          //   });
-
-          //   console.log("passCount", game.passCount);
-
-          //   console.log(game, "game");
-          //   console.log(game.gameScore, "gameScore");
-
-          //   console.log(game.gameScore, "this is new gameScore in state");
-        } else if (game.gameBoard[i][j] === whiteLetter) {
+        } else if (game.board[i][j] === whiteLetter) {
           newCaptivesW2B += 1;
-          //   const newGameScore = {
-          //     ...game.gameScore,
-          //     whiteStonesLostToBlack:
-          //       gameScore.whiteStonesLostToBlack + newCaptivesW2B,
-          //   };
-          //   setGame({ ...game, gameScore: newGameScore });
         }
-        newGameBoard[i][j] = emptyLetter;
+        newBoard[i][j] = emptyLetter;
       }
     }
   }
-  setGame({
-    ...game,
-    gameScore: {
-      blackStonesLostToWhite: newCaptivesB2W,
-      whiteStonesLostToBlack: newCaptivesW2B,
-    },
-  });
-  return newGameBoard;
-};
-
-export const removeCapturedStones = (game: Game, setGame: Function) => {
-  // We don't need to run our heavy algos if a user has just passed
-  if (game.passCount === 0) {
-    // We run this once where we treat the player who just moved as "Safe"
-    const freshLibertyBoard = assessLibertyAcrossBoard({
-      gameBoard: game.gameBoard,
-      libertyBoard: textBoardGenerator(game.gameBoard.length, ""),
-      focusOnBlack: game.bIsNext,
-    });
-    const freshGameBoard = removeCapturedStonesOneCycle({
-      game: game,
-      setGame: setGame,
-      gameBoard: game.gameBoard, //delete
-      libertyBoard: freshLibertyBoard, //DON'T delete
-      gameScore: game.gameScore, // delete
-    });
-
-    // Then we run it again to assess for suicides
-    const freshLibertyBoard2 = assessLibertyAcrossBoard({
-      gameBoard: freshGameBoard,
-      libertyBoard: textBoardGenerator(game.gameBoard.length, ""),
-      focusOnBlack: !game.bIsNext,
-    });
-    const freshGameBoard2 = removeCapturedStonesOneCycle({
-      game: { ...game, gameBoard: freshGameBoard },
-      setGame: setGame,
-      gameBoard: freshGameBoard,
-      libertyBoard: freshLibertyBoard2,
-      gameScore: game.gameScore,
-    });
-
-    if (JSON.stringify(game.gameBoard) != JSON.stringify(freshGameBoard2)) {
-      console.log("Stone(s) have been captured.");
-      //   setBoard(freshGameBoard2);
-      console.log("state version:", game.gameBoard);
-      console.log("fresh version:", freshGameBoard2);
-      setGame({ ...game, gameBoard: freshGameBoard2 });
-      console.log("new state version:", game.gameBoard);
-    }
-  }
-
-  return game;
+  const updatedGame = { ...game, board: newBoard };
+  /// ADD IN HERE THE SCORE...
+  return updatedGame;
 };

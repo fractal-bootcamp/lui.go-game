@@ -27,7 +27,7 @@ export type GameScore = {
 
 export type Game = {
   id: string;
-  gameBoard: string[][];
+  board: string[][];
   bIsNext: boolean;
   passCount: number;
   gameScore: GameScore;
@@ -38,7 +38,7 @@ export type Game = {
 
 export const exampleGame = {
   id: "fuzzy-cow",
-  gameBoard: structuredClone(textBoardGenerator(9, "E")),
+  board: structuredClone(textBoardGenerator(9, "E")),
   bIsNext: true,
   passCount: 0,
   gameScore: { blackStonesLostToWhite: 0, whiteStonesLostToBlack: 0 },

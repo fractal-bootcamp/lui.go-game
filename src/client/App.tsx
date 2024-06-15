@@ -8,7 +8,7 @@ import {
 
 import {
   addNewStone,
-  removeCapturedStones,
+  removeCapturedStones as removeCapturedStones,
 } from "../shared/BoardUpdaters"
 
 
@@ -130,16 +130,12 @@ const ShowTile = ({
   const sharedClassName = `flex flex-col w-10 h-10 rounded-sm m-1 p-2 font-bold ${tileBGColor}`;
   const nullClass = "text-gray-500 cursor-pointer";
 
-  const board = game.gameBoard
-  const bIsNext = game.bIsNext
-
   const makeMove = () => {
-    const newBoard = addNewStone(board, rowNum, colNum, bIsNext)
-
-    setGame({...game, gameBoard: newBoard, bIsNext: !bIsNext})
+    const updatedGame = addNewStone(game, rowNum, colNum)
+    setGame(updatedGame)
   };
 
-  if (board[rowNum][colNum] === blackLetter) {
+  if (game.board[rowNum][colNum] === blackLetter) {
     return (
       <div className={sharedClassName + " " + blackTextClass}>
         <div className={blackStoneClass}>&nbsp;
@@ -148,7 +144,7 @@ const ShowTile = ({
       </div>
     );
   }
-  if (board[rowNum][colNum] === whiteLetter) {
+  if (game.board[rowNum][colNum] === whiteLetter) {
     return (
       <div className={sharedClassName + " " + whiteTextClass}>
         <div className={whiteStoneClass}>&nbsp;
@@ -156,7 +152,7 @@ const ShowTile = ({
           </div>
       </div>
     );
-  } else if (board[rowNum][colNum] === emptyLetter) {
+  } else if (game.board[rowNum][colNum] === emptyLetter) {
     const showInfluence = (localInfluence != 0 && userSettings.showInfluence);
     const tileDisplay = showInfluence ? localInfluence : "";
     return (
@@ -185,7 +181,7 @@ const ShowBoard = ({
 
   return (
     <>
-      {game.gameBoard.map((rowArray, rowIndex) => {
+      {game.board.map((rowArray, rowIndex) => {
         return (
           <div className={sharedRowClassName}>
             {rowArray.map(
@@ -287,7 +283,7 @@ function App() {
 
   useEffect(()=> {
     const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
-    setSoloGame({...soloGame, gameBoard: freshBoard, bIsNext: true})
+    setSoloGame({...soloGame, board: freshBoard, bIsNext: true})
 
   },[userSettings.boardSize])
 
@@ -297,12 +293,12 @@ function App() {
 
   useEffect(()=> {
     console.log("removing")
-    removeCapturedStones(soloGame,()=>{})
+    const updatedGame = removeCapturedStones(soloGame)
 
     // const updatedGame = removeCapturedStones(soloGame)
     // setSoloGame(updatedGame)
 
-    },[soloGame.gameBoard])
+    },[soloGame.board])
 
 
   
@@ -319,8 +315,8 @@ function App() {
   // size of influence board in this function is pegged to the version of board in State
   // because State sometimes lags slightly behind
   const influence = assessInfluenceAcrossBoard({
-    gameBoard: soloGame.gameBoard,
-    influenceBoard: numberBoardGenerator(soloGame.gameBoard.length, 0),
+    gameBoard: soloGame.board,
+    influenceBoard: numberBoardGenerator(soloGame.board.length, 0),
     recursionCount: 0,
   });
 

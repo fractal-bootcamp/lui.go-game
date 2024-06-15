@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 
-import { Game, exampleGame } from "../shared/constants";
+import { PORT, Game, exampleGameForServer } from "../shared/constants";
 
 // import { updateGameWithMove } from "../shared/BoardUpdaters";
 
@@ -11,7 +11,6 @@ const app = express();
 
 // add json handling
 app.use(express.json());
-
 // add cors
 app.use(cors());
 
@@ -20,7 +19,7 @@ app.use(cors());
 export type GamesDict = Record<string, Game>;
 
 const gamesDict: GamesDict = {
-  "fuzzy-cow": exampleGame,
+  "online-game-1": exampleGameForServer,
 };
 
 // Keep Influence on the client
@@ -37,7 +36,7 @@ app.get("/game/:id", (req, res) => {
   // If no game found
   if (!game) {
     return res.status(404).send("Game not found (GET)");
-  }
+  } else console.log("Well formed GET request for game:", id);
 
   // We'll pass back the game object
   res.json({ game: game });
@@ -56,7 +55,8 @@ app.post("/game/:id/move", (req, res) => {
     return res.status(404).send("Game not found (POST /move)");
   }
 
-  const updatedGame = { ...updateGameWithMove(game, rowNum, colNum) };
+  const updatedGame = game;
+  //  { ...updateGameWithMove(game, rowNum, colNum) };
 
   res.json({ updatedGame });
 });
@@ -75,8 +75,6 @@ app.post("/game/:id/reset", (req, res) => {
 
   res.json({ game });
 });
-
-const PORT = 4001;
 
 app.listen(PORT, () => {
   console.log("listening on port " + PORT);

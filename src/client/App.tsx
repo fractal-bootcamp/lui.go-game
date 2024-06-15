@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { SettingDropdown } from "../client/DropDown";
+import { SettingDropdown } from "../client/Dropdown"
 
 import {
   assessInfluenceAcrossBoard
@@ -32,6 +32,13 @@ import {
   exampleGame
 } from "../shared/constants"
 
+
+import {
+  getGame,
+  voluntaryPassServer,
+  refreshBoardServer,
+  onTileClickServer,
+} from "../client/ServerCalls"
 
 
 //// STYLING USED IN NextPlayerMessage AND ShowTile ////
@@ -280,19 +287,45 @@ function App() {
   });
  
   const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
+  const [serverGame, setServerGame] = useState<Game>(structuredClone(exampleGame))
+
+  const isSolo = userSettings.playMode === "Solo"
+  const game = isSolo ? soloGame : serverGame      // ADD IN CONDITIONAL HERE ONCE serverGame is an option
+  const setGame = isSolo ? setSoloGame : setServerGame   // TBD if this is needed
+
+  // const [poller, setPoller] = useState(0);
+
+  useEffect(() => {
+    const initializeGame = async () => {
+      //Go get a game
+      if (!isSolo){
+        const data = await getGame("online-game-1");
+        // store the game in state
+        setGame(data.game)
+        console.log("GAME HAS BEEN SET")
+        console.log("NEW GAME DETAILS", game.board)
+      }
+    }
+    
+    // call the function
+    initializeGame();
+
+    // polling
+    // setTimeout(() => {
+    //   setPoller(poller + 1);
+    // }, 1000);
+  }, [game.moveCount]);
 
   useEffect(()=> {
     const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
-    setSoloGame({...soloGame, board: freshBoard, bIsNext: true})
+    setGame({...game, board: freshBoard, bIsNext: true})
 
   },[userSettings.boardSize])
 
-
-
   useEffect(()=> {
-    const updatedGame = removeCapturedStones(soloGame)
-    setSoloGame(updatedGame)
-    },[soloGame.moveCount])
+    const updatedGame = removeCapturedStones(game)
+    setGame(updatedGame)
+    },[game.moveCount])
 
 
   
@@ -309,14 +342,14 @@ function App() {
   // size of influence board in this function is pegged to the version of board in State
   // because State sometimes lags slightly behind
   const influence = assessInfluenceAcrossBoard({
-    gameBoard: soloGame.board,
-    influenceBoard: numberBoardGenerator(soloGame.board.length, 0),
+    gameBoard: game.board,
+    influenceBoard: numberBoardGenerator(game.board.length, 0),
     recursionCount: 0,
   });
 
   return (
     <>
-      <NextPlayerMessage bIsNext={soloGame.bIsNext} />
+      <NextPlayerMessage bIsNext={game.bIsNext} />
 
       <ShowInfluenceToggle 
         userSettings={userSettings}
@@ -324,18 +357,18 @@ function App() {
       />
       <br />
 
-      <ShowScore gameScore={soloGame.gameScore}/>
+      <ShowScore gameScore={game.gameScore}/>
 
       <ShowBoard
-        game={soloGame}
-        setGame={setSoloGame}
+        game={game}
+        setGame={setGame}
         influence={influence}
         userSettings={userSettings}
       />
 
       <ActionButton
         text="Pass"
-        action={()=>voluntaryPass(soloGame, setSoloGame)}
+        action={()=>voluntaryPass(game, setGame)}
       />
 
       <SettingDropdown
@@ -355,11 +388,11 @@ function App() {
         settingOptions={["Small", "Medium", "Large"]}
       />
 
-      <ActionButton text= "Start again" action={() => refreshBoard(soloGame, setSoloGame, userSettings)} />
+      <ActionButton text= "Start again" action={() => refreshBoard(game, setGame, userSettings)} />
 
       <ShowResults
-        outcome={soloGame.winState.outcome}
-        winner={soloGame.winState.winner}
+        outcome={game.winState.outcome}
+        winner={game.winState.winner}
       />
 
     </>

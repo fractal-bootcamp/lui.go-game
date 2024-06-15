@@ -305,7 +305,7 @@ function App() {
 
 
   
-  // let currentWinState = checkWinCondition(board);
+  // let currentWinState = checkWinCondition(game);
 
   // if (passCount > 1) {
   //   currentWinState = {
@@ -356,10 +356,10 @@ function App() {
 
       <ActionButton text= "Start again" action={() => refreshBoard(soloGame, setSoloGame, userSettings)} />
 
-      {/* <ShowResults
-        outcome={currentWinState.outcome}
-        winner={currentWinState.winner}
-      /> */}
+      <ShowResults
+        outcome={soloGame.winState.outcome}
+        winner={soloGame.winState.winner}
+      />
 
     </>
   );
@@ -370,10 +370,10 @@ export default App;
 //
 // COMING UP NEXT
 //
-// Get rid of setBoard etc
-// pull setGame out of the Updater.ts functions
-// Reusable DropDown
-// Add Multiplayer option to UserSettings
+// DONE Get rid of setBoard etc
+// DONE pull setGame out of the Updater.ts functions
+// DONE Reusable DropDown
+// DONE Add Multiplayer option to UserSettings
 // Start passing Game object that includes board, rather than smaller object
 // Enable user to enter a 
 // Fix the Influence algorithm so that it's rotationally balanced (assessments need to be made off older version of influence board)

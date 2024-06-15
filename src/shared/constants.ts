@@ -15,6 +15,14 @@ export const boardLengthDict = {
   // Any new values here will also need to be added to UserSettings type
 };
 
+export type UserSettings = {
+  showInfluence: boolean;
+  boardSize: "Small" | "Medium" | "Large";
+  playMode: "Solo" | "Online";
+  dropDownHidden: boolean;
+  singlePlayer: boolean;
+};
+
 export type WinState = {
   outcome: string | null;
   winner: string | null;

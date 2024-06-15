@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { SizeDropdown } from "./DropDown";
+import { SettingDropdown } from "../client/DropDown";
 
 import {
   assessInfluenceAcrossBoard
@@ -26,6 +26,7 @@ import {
   whiteLetter,
   emptyLetter,
   boardLengthDict,
+  UserSettings,
   Game,
   GameScore,
   exampleGame
@@ -262,12 +263,6 @@ const ShowResults = ({
   } else return null;
 };
 
-export type UserSettings = {
-  showInfluence: boolean
-  boardSize: "Small" | "Medium" | "Large"
-  dropDownHidden: boolean
-  singlePlayer: boolean
-}
 
 
 
@@ -279,14 +274,12 @@ function App() {
   const [userSettings, setUserSettings] = useState<UserSettings>({
     showInfluence: false,
     boardSize: "Small",
+    playMode: "Solo",
     dropDownHidden: true,
     singlePlayer: true
   });
  
   const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
-
-  console.log("passCount on reload:", soloGame.passCount)
-  console.log("moveCount on reload:", soloGame.moveCount)
 
   useEffect(()=> {
     const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
@@ -297,8 +290,6 @@ function App() {
 
 
   useEffect(()=> {
-    console.log("Change in moveCount detected, triggering removeCapturedStones sequence")
-    console.log("BOARD:", soloGame.board)
     const updatedGame = removeCapturedStones(soloGame)
     setSoloGame(updatedGame)
     },[soloGame.moveCount])
@@ -347,7 +338,17 @@ function App() {
         action={()=>voluntaryPass(soloGame, setSoloGame)}
       />
 
-      <SizeDropdown
+      <SettingDropdown
+        userSettings={userSettings}
+        setUserSettings={setUserSettings}
+        settingKey="playMode"
+        settingOptions={["Solo", "Online"]}
+      />
+
+      <br />
+      <br />
+
+      <SettingDropdown
         userSettings={userSettings}
         setUserSettings={setUserSettings}
         settingKey="boardSize"
@@ -374,7 +375,7 @@ export default App;
 // DONE pull setGame out of the Updater.ts functions
 // DONE Reusable DropDown
 // DONE Add Multiplayer option to UserSettings
-// Start passing Game object that includes board, rather than smaller object
+// DONE Start passing Game object that includes board, rather than smaller object
 // Enable user to enter a 
 // Fix the Influence algorithm so that it's rotationally balanced (assessments need to be made off older version of influence board)
 // Replace the boardsizenumber with boardLengthDict[userSettings.boardSize]

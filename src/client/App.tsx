@@ -337,6 +337,8 @@ function App() {
  
   const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
 
+  console.log("passcount on reload", soloGame.passCount)
+
   useEffect(()=> {
     setBoard(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter))
     setBIsNext(true);
@@ -347,51 +349,14 @@ function App() {
   const [board, setBoard] = useState(structuredClone(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)));
   const [bIsNext, setBIsNext] = useState(true);
   const [passCount, setPassCount] = useState(0);
-  const [gameScore, setGameScore] = useState<GameScore>({
-    blackStonesLostToWhite: 0,
-    whiteStonesLostToBlack: 0
-  })
 
 
-  removeCapturedStones(soloGame,setSoloGame,setGameScore)
+  useEffect(()=> {
+    console.log("removing")
+    removeCapturedStones(soloGame,setSoloGame)
+    },[soloGame.gameBoard])
 
-  // We don't need to run our heavy algos if a user has just passed
-  if (passCount === 0 && boardLengthDict[userSettings.boardSize] === board.length) {
-    // We run this once where we treat the player who just moved as "Safe"
-    const freshLibertyBoard = assessLibertyAcrossBoard({
-      gameBoard: board,
-      libertyBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
-      focusOnBlack: bIsNext,
-    });
-    const freshGameBoard = removeCapturedStonesOneCycle({
-      game: soloGame,
-      setGame: setSoloGame,
-      gameBoard: board,
-      libertyBoard: freshLibertyBoard,
-      gameScore: gameScore,
-      setGameScore: setGameScore,
-    });
 
-    // Then we run it again to assess for suicides
-    const freshLibertyBoard2 = assessLibertyAcrossBoard({
-      gameBoard: freshGameBoard,
-      libertyBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
-      focusOnBlack: !bIsNext,
-    });
-    const freshGameBoard2 = removeCapturedStonesOneCycle({
-      game: soloGame,
-      setGame: setSoloGame,
-      gameBoard: freshGameBoard,
-      libertyBoard: freshLibertyBoard2,
-      gameScore: gameScore,
-      setGameScore: setGameScore,
-    });
-
-    if (JSON.stringify(board) != JSON.stringify(freshGameBoard2)) {
-      console.log("Stone(s) have been captured.");
-      setBoard(freshGameBoard2);
-    }
-  }
   
   // let currentWinState = checkWinCondition(board);
 

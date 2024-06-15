@@ -32,63 +32,65 @@ export const removeCapturedStonesOneCycle = ({
   gameBoard,
   libertyBoard,
   gameScore,
-  setGameScore,
 }: {
   game: Game;
   setGame: Function;
   gameBoard: string[][];
   libertyBoard: string[][];
   gameScore: GameScore;
-  setGameScore: Function;
 }): string[][] => {
-  const newGameBoard = structuredClone(gameBoard);
+  const newGameBoard = structuredClone(game.gameBoard);
 
   let newCaptivesB2W = 0;
   let newCaptivesW2B = 0;
 
-  for (let i = 0; i < gameBoard.length; i++) {
-    for (let j = 0; j < gameBoard.length; j++) {
+  for (let i = 0; i < game.gameBoard.length; i++) {
+    for (let j = 0; j < game.gameBoard.length; j++) {
       // On libertyBoard, empty string at this stage means we have confirmed they do not have liberties
       if (libertyBoard[i][j] == "") {
-        if (gameBoard[i][j] === blackLetter) {
+        if (game.gameBoard[i][j] === blackLetter) {
           newCaptivesB2W += 1;
-          setGameScore({
-            ...gameScore,
-            blackStonesLostToWhite:
-              gameScore.blackStonesLostToWhite + newCaptivesB2W,
-          });
-          const newGameScore = {
-            ...game.gameScore,
-            blackStonesLostToWhite:
-              gameScore.blackStonesLostToWhite + newCaptivesB2W,
-          };
-          setGame({ ...game, gameScore: newGameScore });
-        } else if (gameBoard[i][j] === whiteLetter) {
+          //   const newGameScore = {
+          //     ...game.gameScore,
+          //     blackStonesLostToWhite: game.gameScore.blackStonesLostToWhite + 1,
+          //   };
+          //   console.log(newCaptivesB2W, "black stones captured");
+
+          //   setGame({
+          //     ...game,
+          //     passCount: 999999999,
+          //   });
+
+          //   console.log("passCount", game.passCount);
+
+          //   console.log(game, "game");
+          //   console.log(game.gameScore, "gameScore");
+
+          //   console.log(game.gameScore, "this is new gameScore in state");
+        } else if (game.gameBoard[i][j] === whiteLetter) {
           newCaptivesW2B += 1;
-          setGameScore({
-            ...gameScore,
-            whiteStonesLostToBlack:
-              gameScore.whiteStonesLostToBlack + newCaptivesW2B,
-          });
-          const newGameScore = {
-            ...game.gameScore,
-            whiteStonesLostToBlack:
-              gameScore.whiteStonesLostToBlack + newCaptivesW2B,
-          };
-          setGame({ ...game, gameScore: newGameScore });
+          //   const newGameScore = {
+          //     ...game.gameScore,
+          //     whiteStonesLostToBlack:
+          //       gameScore.whiteStonesLostToBlack + newCaptivesW2B,
+          //   };
+          //   setGame({ ...game, gameScore: newGameScore });
         }
         newGameBoard[i][j] = emptyLetter;
       }
     }
   }
+  setGame({
+    ...game,
+    gameScore: {
+      blackStonesLostToWhite: newCaptivesB2W,
+      whiteStonesLostToBlack: newCaptivesW2B,
+    },
+  });
   return newGameBoard;
 };
 
-export const removeCapturedStones = (
-  game: Game,
-  setGame: Function,
-  setGameScore: Function
-) => {
+export const removeCapturedStones = (game: Game, setGame: Function) => {
   // We don't need to run our heavy algos if a user has just passed
   if (game.passCount === 0) {
     // We run this once where we treat the player who just moved as "Safe"
@@ -103,7 +105,6 @@ export const removeCapturedStones = (
       gameBoard: game.gameBoard, //delete
       libertyBoard: freshLibertyBoard, //DON'T delete
       gameScore: game.gameScore, // delete
-      setGameScore: setGameScore, // delete
     });
 
     // Then we run it again to assess for suicides
@@ -113,12 +114,11 @@ export const removeCapturedStones = (
       focusOnBlack: !game.bIsNext,
     });
     const freshGameBoard2 = removeCapturedStonesOneCycle({
-      game: game,
+      game: { ...game, gameBoard: freshGameBoard },
       setGame: setGame,
       gameBoard: freshGameBoard,
       libertyBoard: freshLibertyBoard2,
       gameScore: game.gameScore,
-      setGameScore: setGameScore,
     });
 
     if (JSON.stringify(game.gameBoard) != JSON.stringify(freshGameBoard2)) {

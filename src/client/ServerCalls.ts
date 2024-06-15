@@ -40,7 +40,23 @@ export const refreshBoardServer = (
   setGame({ ...game, gameBoard: newBoard, bIsNext: true, passCount: 0 });
 };
 
-export const onTileClickServer = () => {
+export const onTileClickServer = async (
+  id: string,
+  rowNum: number,
+  colNum: number
+) => {
+  const response = await fetch(`${serverPath}/game/${id}/move`, {
+    method: "POST",
+    body: JSON.stringify({ rowNum, colNum }), // id is already included in path
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const json = await response.json();
+  console.log("makeAMove json:", json);
+  return json;
+  //  On client version, what happens here is...
   //   const updatedGame = addNewStone(game, rowNum, colNum);
   //   setGame(updatedGame);
+  //  May make sense to calculate these IN this function and respond with the refreshed game state here
 };

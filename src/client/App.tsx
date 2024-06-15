@@ -144,10 +144,17 @@ const ShowTile = ({
   const sharedClassName = `flex flex-col w-10 h-10 rounded-sm m-1 p-2 font-bold ${tileBGColor}`;
   const nullClass = "text-gray-500 cursor-pointer";
 
-  const onTileClick = () => {
+  const onTileClickSolo = () => {
     const updatedGame = addNewStone(game, rowNum, colNum)
     setGame(updatedGame)
   };
+
+  const onTileClickServerLocal = () => {
+    onTileClickServer(game.id, rowNum, colNum)
+  };
+
+  const onTileClick = (userSettings.playMode === "Solo") ? onTileClickSolo : onTileClickServerLocal
+
 
   if (game.board[rowNum][colNum] === blackLetter) {
     return (
@@ -325,7 +332,7 @@ function App() {
   // If you switch between solo and server play mode, we
   // want to refresh all the components. Currently doing
   // this in a hacky way.
-  
+
   useEffect(()=> {
     setSoloGame({...soloGame})
     setServerGame({...serverGame})

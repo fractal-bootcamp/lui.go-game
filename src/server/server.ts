@@ -55,6 +55,7 @@ app.post("/game/:id/move", (req, res) => {
     return res.status(404).send("Game not found (POST /move)");
   }
 
+  console.log("well formed Move request for", rowNum, colNum);
   const updatedGame = game;
   //  { ...updateGameWithMove(game, rowNum, colNum) };
 

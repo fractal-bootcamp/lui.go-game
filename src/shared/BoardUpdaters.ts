@@ -23,8 +23,13 @@ export const addNewStone = (
   }
   newBoard[rowNum][colNum] = game.bIsNext ? blackLetter : whiteLetter;
 
-  const updatedGame = { ...game, gameBoard: newBoard, bIsNext: !game.bIsNext };
-
+  const updatedGame = {
+    ...game,
+    moveCount: game.moveCount + 1,
+    board: newBoard,
+    bIsNext: !game.bIsNext,
+  };
+  console.log("updatedGame", updatedGame);
   return updatedGame;
 };
 

@@ -88,6 +88,30 @@ const ShowInfluenceToggle = ({ userSettings, setUserSettings }: { userSettings: 
 };
 
 
+const fetchTileBgColor = (localInfluence: number) => {
+
+  let tileBGColor = ""
+
+  if (localInfluence === 0) {
+    tileBGColor = emptyTileBG;
+  } else if (localInfluence < -4) {
+    tileBGColor = whiteTileStrongBG;
+  } else if (localInfluence < -2) {
+    tileBGColor = whiteTileMediumBG;
+  } else if (localInfluence < 0) {
+    tileBGColor = whiteTileWeakBG;
+  } else if (localInfluence > 4) {
+    tileBGColor = blackTileStrongBG;
+  } else if (localInfluence > 2) {
+    tileBGColor = blackTileMediumBG;
+  } else if (localInfluence > 0) {
+    tileBGColor = blackTileWeakBG;
+  }
+
+  return tileBGColor
+}
+
+
 
 const ShowTile = ({
   game,
@@ -104,33 +128,15 @@ const ShowTile = ({
   influence: number[][];
   userSettings: UserSettings;
 }) => {
-  // We use the influence to choose the background color of the tile
-  let tileBGColor = "";
-  const localInfluence = influence[rowNum][colNum];
-  if (!userSettings.showInfluence) {
-    {
-      tileBGColor = emptyTileBG;
-    }
-  } else if (localInfluence === 0) {
-    tileBGColor = emptyTileBG;
-  } else if (localInfluence < -4) {
-    tileBGColor = whiteTileStrongBG;
-  } else if (localInfluence < -2) {
-    tileBGColor = whiteTileMediumBG;
-  } else if (localInfluence < 0) {
-    tileBGColor = whiteTileWeakBG;
-  } else if (localInfluence > 4) {
-    tileBGColor = blackTileStrongBG;
-  } else if (localInfluence > 2) {
-    tileBGColor = blackTileMediumBG;
-  } else if (localInfluence > 0) {
-    tileBGColor = blackTileWeakBG;
-  }
 
+  // We use the influence to choose the background color of the tile
+  const localInfluence = influence[rowNum][colNum];
+  const showInfluence = userSettings.showInfluence
+  const tileBGColor = showInfluence ? fetchTileBgColor(localInfluence) : emptyTileBG
   const sharedClassName = `flex flex-col w-10 h-10 rounded-sm m-1 p-2 font-bold ${tileBGColor}`;
   const nullClass = "text-gray-500 cursor-pointer";
 
-  const makeMove = () => {
+  const onTileClick = () => {
     const updatedGame = addNewStone(game, rowNum, colNum)
     setGame(updatedGame)
   };
@@ -153,10 +159,9 @@ const ShowTile = ({
       </div>
     );
   } else if (game.board[rowNum][colNum] === emptyLetter) {
-    const showInfluence = (localInfluence != 0 && userSettings.showInfluence);
     const tileDisplay = showInfluence ? localInfluence : "";
     return (
-      <a onClick={() => makeMove()}>
+      <a onClick={() => onTileClick()}>
         <div className={sharedClassName + " " + nullClass}>{tileDisplay}</div>
       </a>
     );
@@ -165,6 +170,7 @@ const ShowTile = ({
     return <div></div>;
   }
 };
+
 
 const ShowBoard = ({
   game,
@@ -279,7 +285,8 @@ function App() {
  
   const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
 
-  console.log("passcount on reload", soloGame.passCount)
+  console.log("passCount on reload:", soloGame.passCount)
+  console.log("moveCount on reload:", soloGame.moveCount)
 
   useEffect(()=> {
     const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
@@ -289,16 +296,12 @@ function App() {
 
 
 
-
-
   useEffect(()=> {
-    console.log("removing")
+    console.log("Change in moveCount detected, triggering removeCapturedStones sequence")
+    console.log("BOARD:", soloGame.board)
     const updatedGame = removeCapturedStones(soloGame)
-
-    // const updatedGame = removeCapturedStones(soloGame)
-    // setSoloGame(updatedGame)
-
-    },[soloGame.board])
+    setSoloGame(updatedGame)
+    },[soloGame.moveCount])
 
 
   

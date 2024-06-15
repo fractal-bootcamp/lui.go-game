@@ -3,7 +3,7 @@ import cors from "cors";
 
 import { PORT, Game, exampleGameForServer } from "../shared/constants";
 
-// import { updateGameWithMove } from "../shared/BoardUpdaters";
+import { addNewStone, removeCapturedStones } from "../shared/BoardUpdaters";
 
 import { textBoardGenerator } from "../shared/ArrayGenerator";
 
@@ -55,11 +55,16 @@ app.post("/game/:id/move", (req, res) => {
     return res.status(404).send("Game not found (POST /move)");
   }
 
-  console.log("well formed Move request for", rowNum, colNum);
-  const updatedGame = game;
-  //  { ...updateGameWithMove(game, rowNum, colNum) };
+  console.log("well formed POST request for", rowNum, colNum);
 
-  res.json({ updatedGame });
+  const updatedGame1 = addNewStone(game, rowNum, colNum);
+  const updatedGame2 = removeCapturedStones(updatedGame1);
+
+  gamesDict[id] = updatedGame2;
+
+  console.log("updatedGame is", updatedGame2);
+
+  res.json(updatedGame2);
 });
 
 app.post("/game/:id/reset", (req, res) => {

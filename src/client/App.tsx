@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { SettingDropdown } from "../client/Dropdown"
 
 import {
-  assessInfluenceAcrossBoard
+  assessInfluenceAcrossBoard as assessInfluence
 } from "../shared/BoardAssessors"
 
 import {
@@ -37,7 +37,7 @@ import {
   getGame,
   voluntaryPassServer,
   refreshBoardServer,
-  onTileClickServer,
+  onTileClickServer as sendMoveToServer,
 } from "../client/ServerCalls"
 
 
@@ -149,11 +149,20 @@ const ShowTile = ({
     setGame(updatedGame)
   };
 
-  const onTileClickServerLocal = () => {
-    onTileClickServer(game.id, rowNum, colNum)
+  const onTileClickServer = () => {
+    sendMoveToServer(game.id, rowNum, colNum).then(res => setGame(res))
+
+
+    // sendMoveToServer(game.id, rowNum, colNum).then(res => console.log("THIS IS THE RESPONSE,", res))
+
+    // setGame(updatedGame)
+
+    // I WONDER COULD WE TRY SOMETHING LIKE...
+    // const updatedGame = onTileClickServer(game.id, rowNum, colNum)
+    // setGame(updatedGame)
   };
 
-  const onTileClick = (userSettings.playMode === "Solo") ? onTileClickSolo : onTileClickServerLocal
+  const onTileClick = (userSettings.playMode === "Solo") ? onTileClickSolo : onTileClickServer
 
 
   if (game.board[rowNum][colNum] === blackLetter) {
@@ -296,78 +305,67 @@ function App() {
   const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
   const [serverGame, setServerGame] = useState<Game>(structuredClone(exampleGame))
 
-  const isSolo = userSettings.playMode === "Solo"
-  const game = isSolo ? soloGame : serverGame      // ADD IN CONDITIONAL HERE ONCE serverGame is an option
-  const setGame = isSolo ? setSoloGame : setServerGame   // TBD if this is needed
+  const [activeGame, setActiveGame] = useState<Game>(soloGame)
+  const [functionToSetActiveGame, setFunctionToSetActiveGame] = useState<Function>(setSoloGame)
 
-  // const [poller, setPoller] = useState(0);
+  // If you switch between solo and server play mode, we
+  // want to redefine which game is the Active Game
+  useEffect(()=> {
+    if(userSettings.playMode === "Solo"){
+      setActiveGame(soloGame)
+      setFunctionToSetActiveGame(setSoloGame)
+    }
+    else {
+      setActiveGame(serverGame)
+      setFunctionToSetActiveGame(setServerGame)
+    }
+    console.log("playMode", userSettings)
+  },[userSettings.playMode])
 
+  // If playing online, we need to fetch the game state...
   useEffect(() => {
     const initializeGame = async () => {
-      //Go get a game
-      if (!isSolo){
+      if(userSettings.playMode != "Solo"){
         const data = await getGame("online-game-1");
-        // store the game in state
-        setGame(data.game)
+        // ...and store the game in state
+        setActiveGame(data.game)
         console.log("GAME HAS BEEN SET")
-        console.log("NEW GAME DETAILS", game.board)
+        console.log("NEW GAME DETAILS", activeGame.board)
+      }
+      else{
+        console.log("initializeGame called but game is in Solo Mode")
       }
     }
-    
     // call the function
     initializeGame();
-
     // polling
     // setTimeout(() => {
     //   setPoller(poller + 1);
     // }, 1000);
-  }, [game.moveCount]);
+  }, [activeGame.moveCount]); // We could possible change this to serverGame.moveCount
 
   // If you change the board size, we want a fresh board
   useEffect(()=> {
     const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
-    setGame({...game, board: freshBoard, bIsNext: true})
+    setActiveGame({...activeGame, board: freshBoard, bIsNext: true})
   },[userSettings.boardSize])
 
-  // If you switch between solo and server play mode, we
-  // want to refresh all the components. Currently doing
-  // this in a hacky way.
 
+  // If you have taken a move in local mode, we want to remove captured stones
   useEffect(()=> {
-    setSoloGame({...soloGame})
-    setServerGame({...serverGame})
-    setUserSettings({...userSettings})
-    console.log("playMode", userSettings)
-  },[userSettings.playMode])
-
-  useEffect(()=> {
-    const updatedGame = removeCapturedStones(game)
-    setGame(updatedGame)
-    },[game.moveCount])
+    const updatedGame = removeCapturedStones(activeGame)
+    setActiveGame(updatedGame)
+    },[activeGame.moveCount])
 
 
-  
-  // let currentWinState = checkWinCondition(game);
-
-  // if (passCount > 1) {
-  //   currentWinState = {
-  //     // dummy date for now
-  //     outcome: "WIN",
-  //     winner: blackString,
-  //   };
-  // }
 
   // size of influence board in this function is pegged to the version of board in State
   // because State sometimes lags slightly behind
-  const influence = assessInfluenceAcrossBoard({
-    gameBoard: game.board,
-    influenceBoard: numberBoardGenerator(game.board.length, 0),
-    recursionCount: 0,
-  });
+  const influence = assessInfluence(activeGame.board);
 
   return (
     <>
-      <NextPlayerMessage bIsNext={game.bIsNext} />
+      <NextPlayerMessage bIsNext={activeGame.bIsNext} />
 
       <ShowInfluenceToggle 
         userSettings={userSettings}
@@ -375,18 +373,18 @@ function App() {
       />
       <br />
 
-      <ShowScore gameScore={game.gameScore}/>
+      <ShowScore gameScore={activeGame.gameScore}/>
 
       <ShowBoard
-        game={game}
-        setGame={setGame}
+        game={activeGame}
+        setGame={setActiveGame}
         influence={influence}
         userSettings={userSettings}
       />
 
       <ActionButton
         text="Pass"
-        action={()=>voluntaryPass(game, setGame)}
+        action={()=>voluntaryPass(activeGame, setActiveGame)}
       />
 
       <SettingDropdown
@@ -406,11 +404,11 @@ function App() {
         settingOptions={["Small", "Medium", "Large"]}
       />
 
-      <ActionButton text= "Start again" action={() => refreshBoard(game, setGame, userSettings)} />
+      <ActionButton text= "Start again" action={() => refreshBoard(activeGame, setActiveGame, userSettings)} />
 
       <ShowResults
-        outcome={game.winState.outcome}
-        winner={game.winState.winner}
+        outcome={activeGame.winState.outcome}
+        winner={activeGame.winState.winner}
       />
 
     </>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { SettingDropdown } from "../client/Dropdown"
+import { SettingDropdown } from "./SettingDropdown"
 
 import { assessInfluence } from "../shared/BoardAssessors"
 

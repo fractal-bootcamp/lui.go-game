@@ -1,33 +1,21 @@
-import {
-  PORT,
-  emptyLetter,
-  boardLengthDict,
-  UserSettings,
-  Game,
-} from "../shared/constants";
-
-import { textBoardGenerator } from "../shared/ArrayGenerator";
+import { PORT, Game } from "../shared/constants";
 
 import "./App.css";
 
 const serverPath = `http://localhost:${PORT}`;
 
-export const getGame = async (id: string) => {
+export const getGameFromServer = async (id: string) => {
   const response = await fetch(`${serverPath}/game/${id}`);
   const json = await response.json();
   console.log("getGame json", json);
   return json;
 };
 
-export const voluntaryPassServer = (game: Game, setGame: Function) => {
-  setGame({ ...game, bIsNext: !game.bIsNext, passCount: game.passCount + 1 });
+export const voluntaryPassServer = (game: Game) => {
+  return { ...game, bIsNext: !game.bIsNext, passCount: game.passCount + 1 };
 };
 
-export const refreshBoardServer = async (
-  game: Game,
-  setGame: Function,
-  userSettings: UserSettings
-) => {
+export const refreshBoardServer = async (game: Game) => {
   console.log("refreshBoardServer json", game);
   const response = await fetch(`${serverPath}/game/${game.id}/reset`, {
     method: "POST",
@@ -36,7 +24,6 @@ export const refreshBoardServer = async (
     },
   });
   const newGame = await response.json();
-  setGame(newGame);
   return newGame;
 };
 

@@ -9,18 +9,8 @@ import {
 } from "../shared/useBoardController"
 
 
-import {
-  addNewStone,
-  removeCapturedStones as removeCapturedStones,
-} from "../shared/BoardUpdaters"
-
-
 import "./App.css";
 
-import {
-  numberBoardGenerator,
-  textBoardGenerator,
-} from "../shared/ArrayGenerator";
 
 import {
   blackString,
@@ -28,20 +18,10 @@ import {
   blackLetter,
   whiteLetter,
   emptyLetter,
-  boardLengthDict,
   UserSettings,
   Game,
   GameScore,
-  exampleGame
 } from "../shared/constants"
-
-
-import {
-  getGame,
-  voluntaryPassServer,
-  refreshBoardServer,
-  onTileClickServer as sendMoveToServer,
-} from "../client/ServerCalls"
 
 
 //// STYLING USED IN NextPlayerMessage AND ShowTile ////
@@ -126,14 +106,14 @@ const fetchTileBgColor = (localInfluence: number) => {
 
 const ShowTile = ({
   game,
-  setGame,
+  playMove,
   rowNum,
   colNum,
   influence,
   userSettings,
 }: {
   game: Game;
-  setGame: Function;
+  playMove: Function;
   rowNum: number;
   colNum: number;
   influence: number[][];
@@ -146,27 +126,6 @@ const ShowTile = ({
   const tileBGColor = showInfluence ? fetchTileBgColor(localInfluence) : emptyTileBG
   const sharedClassName = `flex flex-col w-10 h-10 rounded-sm m-1 p-2 font-bold ${tileBGColor}`;
   const nullClass = "text-gray-500 cursor-pointer";
-
-  const onTileClickSolo = () => {
-    const updatedGame = addNewStone(game, rowNum, colNum)
-    setGame(updatedGame)
-  };
-
-  const onTileClickServer = () => {
-    sendMoveToServer(game.id, rowNum, colNum).then(res => setGame(res))
-
-
-    // sendMoveToServer(game.id, rowNum, colNum).then(res => console.log("THIS IS THE RESPONSE,", res))
-
-    // setGame(updatedGame)
-
-    // I WONDER COULD WE TRY SOMETHING LIKE...
-    // const updatedGame = onTileClickServer(game.id, rowNum, colNum)
-    // setGame(updatedGame)
-  };
-
-  const onTileClick = (userSettings.playMode === "Solo") ? onTileClickSolo : onTileClickServer
-
 
   if (game.board[rowNum][colNum] === blackLetter) {
     return (
@@ -188,7 +147,7 @@ const ShowTile = ({
   } else if (game.board[rowNum][colNum] === emptyLetter) {
     const tileDisplay = showInfluence ? localInfluence : "";
     return (
-      <a onClick={() => onTileClick()}>
+      <a onClick={() => playMove(game, rowNum, colNum)}>
         <div className={sharedClassName + " " + nullClass}>{tileDisplay}</div>
       </a>
     );
@@ -201,12 +160,12 @@ const ShowTile = ({
 
 const ShowBoard = ({
   game,
-  setGame,
+  playMove,
   influence,
   userSettings,
 }: {
   game: Game;
-  setGame: Function;
+  playMove: Function;
   influence: number[][];
   userSettings: UserSettings;
 }) => {
@@ -222,7 +181,7 @@ const ShowBoard = ({
               (_cell, colIndex) => (
                 <ShowTile
                   game={game}
-                  setGame={setGame}
+                  playMove={playMove}
                   rowNum={rowIndex}
                   colNum={colIndex}
                   influence={influence}
@@ -238,16 +197,6 @@ const ShowBoard = ({
 };
 
 const buttonStyling = "p-5";
-
-
-const refreshBoard = ( game: Game, setGame: Function, userSettings: UserSettings ) => {
-  const newBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
-  setGame({...game, gameBoard: newBoard, bIsNext: true, passCount: 0 })
-}
-
-const voluntaryPass = ( game: Game, setGame: Function ) => {
-  setGame({...game, bIsNext: !game.bIsNext, passCount: game.passCount+1})
-}
 
 
 const ActionButton = ({ text, action } : { text: string, action : Function } ) => {
@@ -292,103 +241,58 @@ const ShowResults = ({
 
 
 
-
-
 function App() {
   console.log("==== APP REFRESH ====");
 
   const [userSettings, setUserSettings] = useState<UserSettings>({
     showInfluence: false,
     boardSize: "Small",
-    playMode: "Online",
+    playMode: "Solo",
     dropDownHidden: true,
     singlePlayer: true
   });
  
-  // const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
-  // const [serverGame, setServerGame] = useState<Game>(structuredClone(exampleGame))
-
-  const {activeGame, setActiveGame} = useBoardController(userSettings.playMode)
-
-
   // If you switch between solo and server play mode, we
-  // want to redefine which game is the Active Game
-  useEffect(()=> {
-    console.log("useEffect triggered")
-  },[userSettings.playMode])
+  // want to use custom hooks to redefine our four core
+  // game actions
 
-  // const [activeGame, setActiveGame] = useState<Game>(soloGame)
-  // const [functionToSetActiveGame, setFunctionToSetActiveGame] = useState<Function>(() => setSoloGame)
+  const {activeGame, getGame, playMove, resetGame, passMove} = useBoardController(userSettings.playMode)
 
-  // console.log("FUNCTION LOGS:")
-  // console.log(setSoloGame)
-  // console.log(setServerGame)
-  // console.log(functionToSetActiveGame)
+   // If you have taken a move in local mode, we want to remove captured stones
+   useEffect(()=> {
+    console.log("change detected")
+    console.log(activeGame)
+    console.log(getGame)
+    console.log(playMove)
+    console.log(resetGame)
+    console.log(passMove)
+    },[activeGame, getGame, playMove, resetGame, passMove])
+  
 
-  // If you switch between solo and server play mode, we
-  // want to redefine which game is the Active Game
+  // Game               -> getGame          -> Game
+  // Game, row, col     -> playMove         -> Game
+  // Game               -> resetGame        -> Game
+  // Game               -> passMove         -> Game
+
+
+
+  // // REMOVING BOARD SIZE CHANGE TO SIMPLIFY MULTIPLAYER
+  // // If you change the board size, we want a fresh board
   // useEffect(()=> {
-  //   if(userSettings.playMode === "Solo"){
-  //     setActiveGame(soloGame)
-  //     setFunctionToSetActiveGame(setSoloGame)
-  //   }
-  //   else {
-  //     setActiveGame(serverGame)
-  //     setFunctionToSetActiveGame(setServerGame)
-  //   }
-  //   console.log("playMode", userSettings)
-  //   setActiveGame({...activeGame})
-  // },[userSettings.playMode])
-
-  // If playing online, we need to fetch the game state...
-  useEffect(() => {
-    const initializeGame = async () => {
-      if(userSettings.playMode != "Solo"){
-        const data = await getGame("online-game-1");
-        // ...and store the game in state
-        setActiveGame(data.game)
-        console.log("GAME HAS BEEN SET")
-        console.log("NEW GAME DETAILS", activeGame.board)
-      }
-      else{
-        console.log("initializeGame called but game is in Solo Mode")
-      }
-    }
-    // call the function
-    initializeGame();
-    // polling
-    // setTimeout(() => {
-    //   setPoller(poller + 1);
-    // }, 1000);
-  }, [activeGame.moveCount]); // We could possible change this to serverGame.moveCount
-
-  // If you change the board size, we want a fresh board
-  useEffect(()=> {
-    const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
-    setActiveGame({...activeGame, board: freshBoard, bIsNext: true})
-  },[userSettings.boardSize])
+  //   const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
+  //   setActiveGame({...activeGame, board: freshBoard, bIsNext: true})
+  // },[userSettings.boardSize])
 
 
   // If you have taken a move in local mode, we want to remove captured stones
   useEffect(()=> {
-    const updatedGame = removeCapturedStones(activeGame)
-    setActiveGame(updatedGame)
+    getGame(activeGame)
     },[activeGame.moveCount])
 
-
-
-  // size of influence board in this function is pegged to the version of board in State
-  // because State sometimes lags slightly behind
-  console.log("INFLUENCE READING IMMINENT",activeGame)
   const influence = assessInfluence(activeGame);
-
-  console.log("Active game is:", activeGame)
-  console.log("SET Active game is:", setActiveGame)
-
 
   return (
     <>
-      
       <NextPlayerMessage bIsNext={activeGame.bIsNext} />
 
       <ShowInfluenceToggle 
@@ -401,7 +305,7 @@ function App() {
 
       <ShowBoard
         game={activeGame}
-        setGame={setActiveGame}
+        playMove = {playMove}
         influence={influence}
         userSettings={userSettings}
         key={userSettings.playMode}
@@ -409,7 +313,7 @@ function App() {
 
       <ActionButton
         text="Pass"
-        action={()=>voluntaryPass(activeGame, setActiveGame)}
+        action={()=>passMove(activeGame)}
       />
 
       <SettingDropdown
@@ -422,17 +326,14 @@ function App() {
       <br />
       <br />
 
-      <SettingDropdown
+      {/* <SettingDropdown
         userSettings={userSettings}
         setUserSettings={setUserSettings}
         settingKey="boardSize"
         settingOptions={["Small", "Medium", "Large"]}
-      />
+      /> */}
 
-      {/* <ActionButton text= "Start again" action={() => refreshBoard(activeGame, setActiveGame, userSettings)} /> */}
-      <ActionButton text= "Start again" action={() => refreshBoardServer(activeGame, setActiveGame, userSettings)} />
-
-
+      <ActionButton text= "Start again" action={() => resetGame(activeGame)} />
 
       <ShowResults
         outcome={activeGame.winState.outcome}

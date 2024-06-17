@@ -11,7 +11,7 @@ import {
   onTileClickServer,
 } from "../client/ServerCalls";
 
-import { addNewStone } from "../shared/BoardUpdaters";
+import { addNewStone, removeCapturedStones } from "../shared/BoardUpdaters";
 
 // const {getGame, playMove, resetGame, passMove} = useBoardController
 
@@ -30,7 +30,9 @@ export const useBoardController = (mode: string) => {
     mode === "Solo"
       ? async (game: Game) => {
           console.log("Solo game fetch:", game.id);
-          return soloGame;
+          const refreshedGame = removeCapturedStones(game);
+          setSoloGame(refreshedGame);
+          return refreshedGame;
         }
       : async (game: Game) => {
           // const refreshedGame = await getGameFromServer(game.id);

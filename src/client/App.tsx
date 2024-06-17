@@ -152,8 +152,8 @@ const ShowTile = ({
       <a onClick={() => playMove(game, rowNum, colNum)}>
         <motion.div 
           className={sharedClassName + " " + nullClass}
-          whileHover = {{ rotate: rotationNumber, scale: 1.1,  backgroundColor: "#ff0" }}
-          whileTap = {{ scale: 0.95 }}
+          whileHover = {{ rotate: rotationNumber, scale: 1.1 }}
+          whileTap = {{ rotate: -rotationNumber, scale: 0.85 }}
         >{tileDisplay}</motion.div>
       </a>
     );
@@ -270,6 +270,7 @@ function App() {
 
    // If you have taken a move in local mode, we want to remove captured stones
    useEffect(()=> {
+    
     console.log("change detected")
     },[activeGame, syncGame, playMove, resetGame, passMove])
   

@@ -23,16 +23,21 @@ export const voluntaryPassServer = (game: Game, setGame: Function) => {
   setGame({ ...game, bIsNext: !game.bIsNext, passCount: game.passCount + 1 });
 };
 
-export const refreshBoardServer = (
+export const refreshBoardServer = async (
   game: Game,
   setGame: Function,
   userSettings: UserSettings
 ) => {
-  const newBoard = textBoardGenerator(
-    boardLengthDict[userSettings.boardSize],
-    emptyLetter
-  );
-  setGame({ ...game, gameBoard: newBoard, bIsNext: true, passCount: 0 });
+  console.log("refreshBoardServer json", game);
+  const response = await fetch(`${serverPath}/game/${game.id}/reset`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const newGame = await response.json();
+  setGame(newGame);
+  return newGame;
 };
 
 export const onTileClickServer = async (

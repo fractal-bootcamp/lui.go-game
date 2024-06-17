@@ -68,18 +68,30 @@ app.post("/game/:id/move", (req, res) => {
 });
 
 app.post("/game/:id/reset", (req, res) => {
+  console.log("RESET ATTEMPT");
   const id = req.params.id;
-  const game = gamesDict[id];
+  const oldGame = gamesDict[id];
 
-  if (!game) {
+  if (!oldGame) {
     return res.status(404).send("Game not found (POST /reset)");
   }
 
-  game.board = structuredClone(textBoardGenerator(9, "E"));
+  const newBoard = structuredClone(textBoardGenerator(9, "E")); // Only small games on the server for now
   // ADD IN WINSTATE HERE LATER
-  game.bIsNext = true;
 
-  res.json({ game });
+  const newGame = {
+    ...oldGame,
+    board: newBoard,
+    bIsNext: true,
+    passCount: 0,
+    moveCount: 0,
+  };
+
+  gamesDict[id] = newGame;
+
+  console.log("RESET DETECETED - Let's see the whole gamesDict:", gamesDict);
+
+  res.json(newGame);
 });
 
 app.listen(PORT, () => {

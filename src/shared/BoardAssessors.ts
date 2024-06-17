@@ -244,17 +244,20 @@ export const assessLiberty = (
 //   } else return newLibertyBoard;
 // };
 
-export const assessInfluenceAcrossBoard = (
-  board: string[][],
+export const assessInfluence = (
+  game: Game,
   inputInfluenceBoard?: number[][],
   inputRecursionCount?: number
 ): number[][] => {
+  const board = game.board;
+  console.log("Inside assessInfluence:", game);
   const influenceBoard = inputInfluenceBoard
     ? structuredClone(inputInfluenceBoard)
     : numberBoardGenerator(board.length, 0);
 
   const recursionCount = inputRecursionCount ? inputRecursionCount : 0;
 
+  if (game.moveCount === 0) return influenceBoard;
   if (board.length != influenceBoard.length) {
     return influenceBoard;
   }
@@ -408,8 +411,8 @@ export const assessInfluenceAcrossBoard = (
 
   const newRecursionCount = recursionCount + 1;
   if (JSON.stringify(influenceBoard) != JSON.stringify(newInfluenceBoard)) {
-    const newNewInfluenceBoard = assessInfluenceAcrossBoard(
-      board,
+    const newNewInfluenceBoard = assessInfluence(
+      game,
       newInfluenceBoard,
       newRecursionCount
     );

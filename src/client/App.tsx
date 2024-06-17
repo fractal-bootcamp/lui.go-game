@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 
 import { SettingDropdown } from "../client/Dropdown"
 
+import { assessInfluence } from "../shared/BoardAssessors"
+
 import {
-  assessInfluenceAcrossBoard as assessInfluence
-} from "../shared/BoardAssessors"
+ useBoardController
+} from "../shared/useBoardController"
+
 
 import {
   addNewStone,
@@ -297,36 +300,45 @@ function App() {
   const [userSettings, setUserSettings] = useState<UserSettings>({
     showInfluence: false,
     boardSize: "Small",
-    playMode: "Solo",
+    playMode: "Online",
     dropDownHidden: true,
     singlePlayer: true
   });
  
-  const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
-  const [serverGame, setServerGame] = useState<Game>(structuredClone(exampleGame))
+  // const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
+  // const [serverGame, setServerGame] = useState<Game>(structuredClone(exampleGame))
 
-  const [activeGame, setActiveGame] = useState<Game>(soloGame)
-  const [functionToSetActiveGame, setFunctionToSetActiveGame] = useState<Function>(() => setSoloGame)
+  const {activeGame, setActiveGame} = useBoardController(userSettings.playMode)
 
-  console.log("FUNCTION LOGS:")
-  console.log(setSoloGame)
-  console.log(setServerGame)
-  console.log(functionToSetActiveGame)
 
   // If you switch between solo and server play mode, we
   // want to redefine which game is the Active Game
   useEffect(()=> {
-    if(userSettings.playMode === "Solo"){
-      setActiveGame(soloGame)
-      setFunctionToSetActiveGame(setSoloGame)
-    }
-    else {
-      setActiveGame(serverGame)
-      setFunctionToSetActiveGame(setServerGame)
-    }
-    console.log("playMode", userSettings)
-    setActiveGame({...activeGame})
+    console.log("useEffect triggered")
   },[userSettings.playMode])
+
+  // const [activeGame, setActiveGame] = useState<Game>(soloGame)
+  // const [functionToSetActiveGame, setFunctionToSetActiveGame] = useState<Function>(() => setSoloGame)
+
+  // console.log("FUNCTION LOGS:")
+  // console.log(setSoloGame)
+  // console.log(setServerGame)
+  // console.log(functionToSetActiveGame)
+
+  // If you switch between solo and server play mode, we
+  // want to redefine which game is the Active Game
+  // useEffect(()=> {
+  //   if(userSettings.playMode === "Solo"){
+  //     setActiveGame(soloGame)
+  //     setFunctionToSetActiveGame(setSoloGame)
+  //   }
+  //   else {
+  //     setActiveGame(serverGame)
+  //     setFunctionToSetActiveGame(setServerGame)
+  //   }
+  //   console.log("playMode", userSettings)
+  //   setActiveGame({...activeGame})
+  // },[userSettings.playMode])
 
   // If playing online, we need to fetch the game state...
   useEffect(() => {
@@ -367,10 +379,16 @@ function App() {
 
   // size of influence board in this function is pegged to the version of board in State
   // because State sometimes lags slightly behind
-  const influence = assessInfluence(activeGame.board);
+  console.log("INFLUENCE READING IMMINENT",activeGame)
+  const influence = assessInfluence(activeGame);
+
+  console.log("Active game is:", activeGame)
+  console.log("SET Active game is:", setActiveGame)
+
 
   return (
     <>
+      
       <NextPlayerMessage bIsNext={activeGame.bIsNext} />
 
       <ShowInfluenceToggle 
@@ -386,6 +404,7 @@ function App() {
         setGame={setActiveGame}
         influence={influence}
         userSettings={userSettings}
+        key={userSettings.playMode}
       />
 
       <ActionButton
@@ -410,7 +429,10 @@ function App() {
         settingOptions={["Small", "Medium", "Large"]}
       />
 
-      <ActionButton text= "Start again" action={() => refreshBoard(activeGame, setActiveGame, userSettings)} />
+      {/* <ActionButton text= "Start again" action={() => refreshBoard(activeGame, setActiveGame, userSettings)} /> */}
+      <ActionButton text= "Start again" action={() => refreshBoardServer(activeGame, setActiveGame, userSettings)} />
+
+
 
       <ShowResults
         outcome={activeGame.winState.outcome}

@@ -1,12 +1,7 @@
 import express from "express";
 import cors from "cors";
 
-import {
-  PORT,
-  Game,
-  exampleGameForServer,
-  gamesDict,
-} from "../shared/constants";
+import { PORT, gamesDict } from "../shared/constants";
 
 import { addNewStone, removeCapturedStones } from "../shared/BoardUpdaters";
 

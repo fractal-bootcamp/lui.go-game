@@ -26,7 +26,7 @@ export const useBoardController = (mode: string) => {
     gamesDict["online-game-1"]
   );
 
-  const getGame =
+  const syncGame =
     mode === "Solo"
       ? async (game: Game) => {
           console.log("Solo game fetch:", game.id);
@@ -108,7 +108,7 @@ export const useBoardController = (mode: string) => {
 
   console.log("Mode is:", mode);
 
-  return { activeGame, getGame, playMove, resetGame, passMove };
+  return { activeGame, syncGame, playMove, resetGame, passMove };
 };
 
 // export const useBoardControllerOG = (mode: string) => {

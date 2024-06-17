@@ -256,12 +256,12 @@ function App() {
   // want to use custom hooks to redefine our four core
   // game actions
 
-  const {activeGame, getGame, playMove, resetGame, passMove} = useBoardController(userSettings.playMode)
+  const {activeGame, syncGame, playMove, resetGame, passMove} = useBoardController(userSettings.playMode)
 
    // If you have taken a move in local mode, we want to remove captured stones
    useEffect(()=> {
     console.log("change detected")
-    },[activeGame, getGame, playMove, resetGame, passMove])
+    },[activeGame, syncGame, playMove, resetGame, passMove])
   
 
   // Game               -> getGame          -> Game
@@ -270,7 +270,13 @@ function App() {
   // Game               -> passMove         -> Game
 
 
+  const [poller, setPoller] = useState<number>(0)
 
+  useEffect(() => {
+    syncGame(activeGame)
+    setTimeout(() => {setPoller(poller+1)}, 800)
+  }, [poller]
+  )
   // // REMOVING BOARD SIZE CHANGE TO SIMPLIFY MULTIPLAYER
   // // If you change the board size, we want a fresh board
   // useEffect(()=> {
@@ -281,7 +287,7 @@ function App() {
 
   // If you have taken a move in local mode, we want to remove captured stones
   useEffect(()=> {
-    getGame(activeGame)
+    syncGame(activeGame)
     },[activeGame.moveCount])
 
   const influence = assessInfluence(activeGame);

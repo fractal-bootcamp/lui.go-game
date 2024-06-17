@@ -359,20 +359,27 @@ function App() {
 export default App;
 
 //
-// COMING UP NEXT
-//
-// DONE Get rid of setBoard etc
-// DONE pull setGame out of the Updater.ts functions
-// DONE Reusable DropDown
-// DONE Add Multiplayer option to UserSettings
-// DONE Start passing Game object that includes board, rather than smaller object
-// Enable user to enter a 
-// Fix the Influence algorithm so that it's rotationally balanced (assessments need to be made off older version of influence board)
+// DONE DONE DONE DONE
+// Get rid of setBoard etc
+// pull setGame out of the Updater.ts functions
+// Reusable DropDown
+// Add Multiplayer option to UserSettings
+// Start passing Game object that includes board, rather than smaller object
+// Enable user to switch between modes
 // Replace the boardsizenumber with boardLengthDict[userSettings.boardSize]
 // Count captured pieces somewhere
-// End of game scoring
+//
+// COMING UP NEXT
+// Add animation to captured tiles
+// Move Game mode dropdown to top of page as an elegant toggle
+// Only show size dropdown for solo mode
+// Enable Online player to create a new shareable game
+// Enable Online player only claim a side, and only play that side
+// Fix the Influence algorithm so that it's rotationally balanced (assessments need to be made off older version of influence board)
+// Fix the Influence display option so it's not gross
+// Add in basic Win Condition check (full board)
 // Display captured pieces on sides
-// NPC opponent
+// NPC opponent on Solo Mode
 // Make NPC optional
 // Let user choose colours
 // Ko

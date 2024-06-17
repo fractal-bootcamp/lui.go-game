@@ -8,6 +8,7 @@ import {
  useBoardController
 } from "../shared/useBoardController"
 
+import {motion} from "framer-motion"
 
 import "./App.css";
 
@@ -146,9 +147,14 @@ const ShowTile = ({
     );
   } else if (game.board[rowNum][colNum] === emptyLetter) {
     const tileDisplay = showInfluence ? localInfluence : "";
+    const rotationNumber = ((rowNum+colNum)%2 === 1) ? -2 : 2
     return (
       <a onClick={() => playMove(game, rowNum, colNum)}>
-        <div className={sharedClassName + " " + nullClass}>{tileDisplay}</div>
+        <motion.div 
+          className={sharedClassName + " " + nullClass}
+          whileHover = {{ rotate: rotationNumber, scale: 1.1 }}
+          whileTap = {{ rotate: -rotationNumber, scale: 0.85 }}
+        >{tileDisplay}</motion.div>
       </a>
     );
   } else {
@@ -202,7 +208,11 @@ const buttonStyling = "p-5";
 const ActionButton = ({ text, action } : { text: string, action : Function } ) => {
   return (
     <div className={buttonStyling}>
-      <button onClick={() => action()}>{text}</button>
+      <motion.button 
+      onClick={() => action()}
+      whileHover = {{  rotate: -5, scale: 1.1 }}
+      whileTap = {{ rotate: 5, scale: 0.90 }}
+      >{text}</motion.button>
     </div>
   );
 };
@@ -260,6 +270,7 @@ function App() {
 
    // If you have taken a move in local mode, we want to remove captured stones
    useEffect(()=> {
+    
     console.log("change detected")
     },[activeGame, syncGame, playMove, resetGame, passMove])
   

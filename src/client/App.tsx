@@ -1,23 +1,16 @@
 import { useEffect, useState } from "react";
 
-import { SizeDropdown } from "./DropDown";
+import { SettingDropdown } from "../client/Dropdown"
+
+import { assessInfluence } from "../shared/BoardAssessors"
 
 import {
-  assessInfluenceAcrossBoard
-} from "../shared/BoardAssessors"
-
-import {
-  addNewStone,
-  removeCapturedStones as removeCapturedStones,
-} from "../shared/BoardUpdaters"
+ useBoardController
+} from "../shared/useBoardController"
 
 
 import "./App.css";
 
-import {
-  numberBoardGenerator,
-  textBoardGenerator,
-} from "../shared/ArrayGenerator";
 
 import {
   blackString,
@@ -25,12 +18,10 @@ import {
   blackLetter,
   whiteLetter,
   emptyLetter,
-  boardLengthDict,
+  UserSettings,
   Game,
   GameScore,
-  exampleGame
 } from "../shared/constants"
-
 
 
 //// STYLING USED IN NextPlayerMessage AND ShowTile ////
@@ -115,14 +106,14 @@ const fetchTileBgColor = (localInfluence: number) => {
 
 const ShowTile = ({
   game,
-  setGame,
+  playMove,
   rowNum,
   colNum,
   influence,
   userSettings,
 }: {
   game: Game;
-  setGame: Function;
+  playMove: Function;
   rowNum: number;
   colNum: number;
   influence: number[][];
@@ -135,11 +126,6 @@ const ShowTile = ({
   const tileBGColor = showInfluence ? fetchTileBgColor(localInfluence) : emptyTileBG
   const sharedClassName = `flex flex-col w-10 h-10 rounded-sm m-1 p-2 font-bold ${tileBGColor}`;
   const nullClass = "text-gray-500 cursor-pointer";
-
-  const onTileClick = () => {
-    const updatedGame = addNewStone(game, rowNum, colNum)
-    setGame(updatedGame)
-  };
 
   if (game.board[rowNum][colNum] === blackLetter) {
     return (
@@ -161,7 +147,7 @@ const ShowTile = ({
   } else if (game.board[rowNum][colNum] === emptyLetter) {
     const tileDisplay = showInfluence ? localInfluence : "";
     return (
-      <a onClick={() => onTileClick()}>
+      <a onClick={() => playMove(game, rowNum, colNum)}>
         <div className={sharedClassName + " " + nullClass}>{tileDisplay}</div>
       </a>
     );
@@ -174,12 +160,12 @@ const ShowTile = ({
 
 const ShowBoard = ({
   game,
-  setGame,
+  playMove,
   influence,
   userSettings,
 }: {
   game: Game;
-  setGame: Function;
+  playMove: Function;
   influence: number[][];
   userSettings: UserSettings;
 }) => {
@@ -195,7 +181,7 @@ const ShowBoard = ({
               (_cell, colIndex) => (
                 <ShowTile
                   game={game}
-                  setGame={setGame}
+                  playMove={playMove}
                   rowNum={rowIndex}
                   colNum={colIndex}
                   influence={influence}
@@ -211,16 +197,6 @@ const ShowBoard = ({
 };
 
 const buttonStyling = "p-5";
-
-
-const refreshBoard = ( game: Game, setGame: Function, userSettings: UserSettings ) => {
-  const newBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
-  setGame({...game, gameBoard: newBoard, bIsNext: true, passCount: 0 })
-}
-
-const voluntaryPass = ( game: Game, setGame: Function ) => {
-  setGame({...game, bIsNext: !game.bIsNext, passCount: game.passCount+1})
-}
 
 
 const ActionButton = ({ text, action } : { text: string, action : Function } ) => {
@@ -262,14 +238,6 @@ const ShowResults = ({
   } else return null;
 };
 
-export type UserSettings = {
-  showInfluence: boolean
-  boardSize: "Small" | "Medium" | "Large"
-  dropDownHidden: boolean
-  singlePlayer: boolean
-}
-
-
 
 
 
@@ -279,53 +247,54 @@ function App() {
   const [userSettings, setUserSettings] = useState<UserSettings>({
     showInfluence: false,
     boardSize: "Small",
+    playMode: "Solo",
     dropDownHidden: true,
     singlePlayer: true
   });
  
-  const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
+  // If you switch between solo and server play mode, we
+  // want to use custom hooks to redefine our four core
+  // game actions
 
-  console.log("passCount on reload:", soloGame.passCount)
-  console.log("moveCount on reload:", soloGame.moveCount)
+  const {activeGame, syncGame, playMove, resetGame, passMove} = useBoardController(userSettings.playMode)
 
-  useEffect(()=> {
-    const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
-    setSoloGame({...soloGame, board: freshBoard, bIsNext: true})
-
-  },[userSettings.boardSize])
-
-
-
-  useEffect(()=> {
-    console.log("Change in moveCount detected, triggering removeCapturedStones sequence")
-    console.log("BOARD:", soloGame.board)
-    const updatedGame = removeCapturedStones(soloGame)
-    setSoloGame(updatedGame)
-    },[soloGame.moveCount])
-
-
+   // If you have taken a move in local mode, we want to remove captured stones
+   useEffect(()=> {
+    console.log("change detected")
+    },[activeGame, syncGame, playMove, resetGame, passMove])
   
-  // let currentWinState = checkWinCondition(game);
 
-  // if (passCount > 1) {
-  //   currentWinState = {
-  //     // dummy date for now
-  //     outcome: "WIN",
-  //     winner: blackString,
-  //   };
-  // }
+  // Game               -> getGame          -> Game
+  // Game, row, col     -> playMove         -> Game
+  // Game               -> resetGame        -> Game
+  // Game               -> passMove         -> Game
 
-  // size of influence board in this function is pegged to the version of board in State
-  // because State sometimes lags slightly behind
-  const influence = assessInfluenceAcrossBoard({
-    gameBoard: soloGame.board,
-    influenceBoard: numberBoardGenerator(soloGame.board.length, 0),
-    recursionCount: 0,
-  });
+
+  const [poller, setPoller] = useState<number>(0)
+
+  useEffect(() => {
+    syncGame(activeGame)
+    setTimeout(() => {setPoller(poller+1)}, 800)
+  }, [poller]
+  )
+  // // REMOVING BOARD SIZE CHANGE TO SIMPLIFY MULTIPLAYER
+  // // If you change the board size, we want a fresh board
+  // useEffect(()=> {
+  //   const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
+  //   setActiveGame({...activeGame, board: freshBoard, bIsNext: true})
+  // },[userSettings.boardSize])
+
+
+  // If you have taken a move in local mode, we want to remove captured stones
+  useEffect(()=> {
+    syncGame(activeGame)
+    },[activeGame.moveCount])
+
+  const influence = assessInfluence(activeGame);
 
   return (
     <>
-      <NextPlayerMessage bIsNext={soloGame.bIsNext} />
+      <NextPlayerMessage bIsNext={activeGame.bIsNext} />
 
       <ShowInfluenceToggle 
         userSettings={userSettings}
@@ -333,32 +302,43 @@ function App() {
       />
       <br />
 
-      <ShowScore gameScore={soloGame.gameScore}/>
+      <ShowScore gameScore={activeGame.gameScore}/>
 
       <ShowBoard
-        game={soloGame}
-        setGame={setSoloGame}
+        game={activeGame}
+        playMove = {playMove}
         influence={influence}
         userSettings={userSettings}
+        key={userSettings.playMode}
       />
 
       <ActionButton
         text="Pass"
-        action={()=>voluntaryPass(soloGame, setSoloGame)}
+        action={()=>passMove(activeGame)}
       />
 
-      <SizeDropdown
+      <SettingDropdown
+        userSettings={userSettings}
+        setUserSettings={setUserSettings}
+        settingKey="playMode"
+        settingOptions={["Solo", "Online"]}
+      />
+
+      <br />
+      <br />
+
+      {/* <SettingDropdown
         userSettings={userSettings}
         setUserSettings={setUserSettings}
         settingKey="boardSize"
         settingOptions={["Small", "Medium", "Large"]}
-      />
+      /> */}
 
-      <ActionButton text= "Start again" action={() => refreshBoard(soloGame, setSoloGame, userSettings)} />
+      <ActionButton text= "Start again" action={() => resetGame(activeGame)} />
 
       <ShowResults
-        outcome={soloGame.winState.outcome}
-        winner={soloGame.winState.winner}
+        outcome={activeGame.winState.outcome}
+        winner={activeGame.winState.winner}
       />
 
     </>
@@ -374,7 +354,7 @@ export default App;
 // DONE pull setGame out of the Updater.ts functions
 // DONE Reusable DropDown
 // DONE Add Multiplayer option to UserSettings
-// Start passing Game object that includes board, rather than smaller object
+// DONE Start passing Game object that includes board, rather than smaller object
 // Enable user to enter a 
 // Fix the Influence algorithm so that it's rotationally balanced (assessments need to be made off older version of influence board)
 // Replace the boardsizenumber with boardLengthDict[userSettings.boardSize]

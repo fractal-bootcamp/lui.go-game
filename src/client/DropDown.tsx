@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { UserSettings } from "./App";
+import { UserSettings } from "../shared/constants";
 
-export const SizeDropdown = ({ userSettings, setUserSettings, settingKey, settingOptions }: { userSettings: UserSettings, setUserSettings: Function, settingKey: string, settingOptions: string[]}) => {
+export const SettingDropdown = ({ userSettings, setUserSettings, settingKey, settingOptions }: { userSettings: UserSettings, setUserSettings: Function, settingKey: string, settingOptions: string[]}) => {
     const [isOpen, setOpen] = useState(false)
   
     const handleDropDown = () => {
       setOpen(!isOpen)
     }
   
-    const handleSelect = (size: string) => {
-      setUserSettings( {...userSettings, boardSize: size })
+    const handleSelect = (selection: string) => {
+      console.log({...userSettings, [settingKey]: selection })
+      setUserSettings( {...userSettings, [settingKey]: selection })
     }
 
     const humanTextPrep = settingKey.replace(/([A-Z])/g, " $1");

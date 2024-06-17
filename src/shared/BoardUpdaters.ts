@@ -71,7 +71,7 @@ export const removeCapturedStones = (game: Game): Game => {
   });
 
   // Then we run it again to assess for suicides
-  const libertyBoard2 = assessLiberty(updatedGamePass1, game.bIsNext);
+  const libertyBoard2 = assessLiberty(updatedGamePass1, !game.bIsNext);
   const updatedGamePass2 = removeCaptures({
     game: updatedGamePass1,
     libertyBoard: libertyBoard2,

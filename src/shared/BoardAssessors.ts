@@ -7,7 +7,7 @@ import {
   Game,
 } from "./constants";
 
-import { textBoardGenerator } from "./ArrayGenerator";
+import { numberBoardGenerator, textBoardGenerator } from "./ArrayGenerator";
 
 const checkCell = (
   board: string[][],
@@ -68,7 +68,7 @@ export const assessLiberty = (
   focusOnBlack: boolean,
   inputLibertyBoard?: string[][]
 ): string[][] => {
-  // This must take in both the gameBoard and the libertyBoard because it is recursive
+  // This must take in both the board and the libertyBoard because it is recursive
   // and state of the libertyBoard changes at different levels of recursion
   const libertyBoard = inputLibertyBoard
     ? structuredClone(inputLibertyBoard)
@@ -244,16 +244,20 @@ export const assessLiberty = (
 //   } else return newLibertyBoard;
 // };
 
-export const assessInfluenceAcrossBoard = ({
-  gameBoard,
-  influenceBoard,
-  recursionCount = 0,
-}: {
-  gameBoard: string[][];
-  influenceBoard: number[][];
-  recursionCount: number;
-}): number[][] => {
-  if (gameBoard.length != influenceBoard.length) {
+export const assessInfluence = (
+  game: Game,
+  inputInfluenceBoard?: number[][],
+  inputRecursionCount?: number
+): number[][] => {
+  const board = game.board;
+  const influenceBoard = inputInfluenceBoard
+    ? structuredClone(inputInfluenceBoard)
+    : numberBoardGenerator(board.length, 0);
+
+  const recursionCount = inputRecursionCount ? inputRecursionCount : 0;
+
+  if (game.moveCount === 0) return influenceBoard;
+  if (board.length != influenceBoard.length) {
     return influenceBoard;
   }
   if (recursionCount > 2) {
@@ -299,8 +303,8 @@ export const assessInfluenceAcrossBoard = ({
     [0, -2],
   ];
 
-  for (let i = 0; i < gameBoard.length; i++) {
-    for (let j = 0; j < gameBoard.length; j++) {
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j < board.length; j++) {
       // Skip anything that has already hit a maximum influence
       // if (Math.abs(newInfluenceBoard[i][j]) >= maxInfluence){
       //   null
@@ -310,10 +314,10 @@ export const assessInfluenceAcrossBoard = ({
       // BLACK = POSITIVE INTEGERS
       // WHITE = NEGATIVE INTEGERS
 
-      const isPositive = gameBoard[i][j] === blackLetter;
+      const isPositive = board[i][j] === blackLetter;
 
       // If the tile has a stone on it, assign local, cardinal, inter, super influences
-      if (gameBoard[i][j] === blackLetter || gameBoard[i][j] === whiteLetter) {
+      if (board[i][j] === blackLetter || board[i][j] === whiteLetter) {
         addToCell(newInfluenceBoard, i, j, localInfluence, isPositive);
 
         // Cardinal
@@ -406,11 +410,11 @@ export const assessInfluenceAcrossBoard = ({
 
   const newRecursionCount = recursionCount + 1;
   if (JSON.stringify(influenceBoard) != JSON.stringify(newInfluenceBoard)) {
-    const newNewInfluenceBoard = assessInfluenceAcrossBoard({
-      gameBoard: gameBoard,
-      influenceBoard: newInfluenceBoard,
-      recursionCount: newRecursionCount,
-    });
+    const newNewInfluenceBoard = assessInfluence(
+      game,
+      newInfluenceBoard,
+      newRecursionCount
+    );
     return newNewInfluenceBoard;
   } else return newInfluenceBoard;
 

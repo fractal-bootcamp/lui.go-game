@@ -1,17 +1,17 @@
-const App = () => {
-    const [mode, setMode] = useState('solo')
+// const App = () => {
+//     const [mode, setMode] = useState('solo')
 
-    const {...} = useBoardController(mode)
+//     const {...} = useBoardController(mode)
 
-    return <Board />
+//     return <Board />
 
-}
+// }
 
-const SoloComponent = (props) => {
+// const SoloComponent = (props) => {
 
     
-    return <div>
-        <ToggleMode mode={props.mode} ... />
-        <Board />
-    </div>
-}
+//     return <div>
+//         <ToggleMode mode={props.mode} ... />
+//         <Board />
+//     </div>
+// }

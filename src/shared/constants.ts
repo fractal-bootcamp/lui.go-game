@@ -73,3 +73,9 @@ export const exampleGameForServer = {
   player1: { token: "player1", id: "player1" },
   player2: { token: "player2", id: "player2" },
 };
+
+export type GamesDict = Record<string, Game>;
+
+export const gamesDict: GamesDict = {
+  "online-game-1": exampleGameForServer,
+};

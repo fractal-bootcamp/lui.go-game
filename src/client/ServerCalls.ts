@@ -7,8 +7,8 @@ const serverPath = `http://localhost:${PORT}`;
 export const getGameFromServer = async (id: string) => {
   const response = await fetch(`${serverPath}/game/${id}`);
   const json = await response.json();
-  console.log("getGame json", json);
-  return json;
+  console.log("getGame json", json.game);
+  return json.game;
 };
 
 export const voluntaryPassServer = (game: Game) => {

@@ -1,7 +1,12 @@
 import express from "express";
 import cors from "cors";
 
-import { PORT, Game, exampleGameForServer } from "../shared/constants";
+import {
+  PORT,
+  Game,
+  exampleGameForServer,
+  gamesDict,
+} from "../shared/constants";
 
 import { addNewStone, removeCapturedStones } from "../shared/BoardUpdaters";
 
@@ -15,12 +20,6 @@ app.use(express.json());
 app.use(cors());
 
 // ADD IN game initialization requirements here (e.g. empty board, strings)
-
-export type GamesDict = Record<string, Game>;
-
-const gamesDict: GamesDict = {
-  "online-game-1": exampleGameForServer,
-};
 
 // Keep Influence on the client
 

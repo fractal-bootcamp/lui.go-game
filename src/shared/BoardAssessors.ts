@@ -250,7 +250,6 @@ export const assessInfluence = (
   inputRecursionCount?: number
 ): number[][] => {
   const board = game.board;
-  console.log("Inside assessInfluence:", game);
   const influenceBoard = inputInfluenceBoard
     ? structuredClone(inputInfluenceBoard)
     : numberBoardGenerator(board.length, 0);

@@ -261,11 +261,6 @@ function App() {
    // If you have taken a move in local mode, we want to remove captured stones
    useEffect(()=> {
     console.log("change detected")
-    console.log(activeGame)
-    console.log(getGame)
-    console.log(playMove)
-    console.log(resetGame)
-    console.log(passMove)
     },[activeGame, getGame, playMove, resetGame, passMove])
   
 

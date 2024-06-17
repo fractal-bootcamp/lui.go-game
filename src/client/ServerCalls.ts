@@ -6,12 +6,7 @@ import {
   Game,
 } from "../shared/constants";
 
-import {
-  numberBoardGenerator,
-  textBoardGenerator,
-} from "../shared/ArrayGenerator";
-
-import { useEffect, useState } from "react";
+import { textBoardGenerator } from "../shared/ArrayGenerator";
 
 import "./App.css";
 

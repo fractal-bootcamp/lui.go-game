@@ -306,7 +306,12 @@ function App() {
   const [serverGame, setServerGame] = useState<Game>(structuredClone(exampleGame))
 
   const [activeGame, setActiveGame] = useState<Game>(soloGame)
-  const [functionToSetActiveGame, setFunctionToSetActiveGame] = useState<Function>(setSoloGame)
+  const [functionToSetActiveGame, setFunctionToSetActiveGame] = useState<Function>(() => setSoloGame)
+
+  console.log("FUNCTION LOGS:")
+  console.log(setSoloGame)
+  console.log(setServerGame)
+  console.log(functionToSetActiveGame)
 
   // If you switch between solo and server play mode, we
   // want to redefine which game is the Active Game
@@ -320,6 +325,7 @@ function App() {
       setFunctionToSetActiveGame(setServerGame)
     }
     console.log("playMode", userSettings)
+    setActiveGame({...activeGame})
   },[userSettings.playMode])
 
   // If playing online, we need to fetch the game state...

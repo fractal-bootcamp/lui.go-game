@@ -3,14 +3,12 @@ import { useEffect, useState } from "react";
 import { SizeDropdown } from "./DropDown";
 
 import {
-  checkWinCondition,
-  assessLibertyAcrossBoard,
   assessInfluenceAcrossBoard
 } from "../shared/BoardAssessors"
 
 import {
   addNewStone,
-  removeCapturedStones,
+  removeCapturedStones as removeCapturedStones,
 } from "../shared/BoardUpdaters"
 
 
@@ -19,7 +17,7 @@ import "./App.css";
 import {
   numberBoardGenerator,
   textBoardGenerator,
-} from "./ArrayGenerator";
+} from "../shared/ArrayGenerator";
 
 import {
   blackString,
@@ -28,7 +26,9 @@ import {
   whiteLetter,
   emptyLetter,
   boardLengthDict,
-  GameScore
+  Game,
+  GameScore,
+  exampleGame
 } from "../shared/constants"
 
 
@@ -88,34 +88,11 @@ const ShowInfluenceToggle = ({ userSettings, setUserSettings }: { userSettings: 
 };
 
 
+const fetchTileBgColor = (localInfluence: number) => {
 
-const ShowTile = ({
-  rowNum,
-  colNum,
-  board,
-  setBoard,
-  bIsNext,
-  setBIsNext,
-  influence,
-  userSettings,
-}: {
-  rowNum: number;
-  colNum: number;
-  board: string[][];
-  setBoard: Function;
-  bIsNext: boolean;
-  setBIsNext: Function;
-  influence: number[][];
-  userSettings: UserSettings;
-}) => {
-  // We use the influence to choose the background color of the tile
-  let tileBGColor = "";
-  const localInfluence = influence[rowNum][colNum];
-  if (!userSettings.showInfluence) {
-    {
-      tileBGColor = emptyTileBG;
-    }
-  } else if (localInfluence === 0) {
+  let tileBGColor = ""
+
+  if (localInfluence === 0) {
     tileBGColor = emptyTileBG;
   } else if (localInfluence < -4) {
     tileBGColor = whiteTileStrongBG;
@@ -131,15 +108,40 @@ const ShowTile = ({
     tileBGColor = blackTileWeakBG;
   }
 
+  return tileBGColor
+}
+
+
+
+const ShowTile = ({
+  game,
+  setGame,
+  rowNum,
+  colNum,
+  influence,
+  userSettings,
+}: {
+  game: Game;
+  setGame: Function;
+  rowNum: number;
+  colNum: number;
+  influence: number[][];
+  userSettings: UserSettings;
+}) => {
+
+  // We use the influence to choose the background color of the tile
+  const localInfluence = influence[rowNum][colNum];
+  const showInfluence = userSettings.showInfluence
+  const tileBGColor = showInfluence ? fetchTileBgColor(localInfluence) : emptyTileBG
   const sharedClassName = `flex flex-col w-10 h-10 rounded-sm m-1 p-2 font-bold ${tileBGColor}`;
   const nullClass = "text-gray-500 cursor-pointer";
 
-  const makeMove = () => {
-    setBoard(addNewStone(board, rowNum, colNum, bIsNext));
-    setBIsNext(!bIsNext);
+  const onTileClick = () => {
+    const updatedGame = addNewStone(game, rowNum, colNum)
+    setGame(updatedGame)
   };
 
-  if (board[rowNum][colNum] === blackLetter) {
+  if (game.board[rowNum][colNum] === blackLetter) {
     return (
       <div className={sharedClassName + " " + blackTextClass}>
         <div className={blackStoneClass}>&nbsp;
@@ -148,7 +150,7 @@ const ShowTile = ({
       </div>
     );
   }
-  if (board[rowNum][colNum] === whiteLetter) {
+  if (game.board[rowNum][colNum] === whiteLetter) {
     return (
       <div className={sharedClassName + " " + whiteTextClass}>
         <div className={whiteStoneClass}>&nbsp;
@@ -156,11 +158,10 @@ const ShowTile = ({
           </div>
       </div>
     );
-  } else if (board[rowNum][colNum] === emptyLetter) {
-    const showInfluence = (localInfluence != 0 && userSettings.showInfluence);
+  } else if (game.board[rowNum][colNum] === emptyLetter) {
     const tileDisplay = showInfluence ? localInfluence : "";
     return (
-      <a onClick={() => makeMove()}>
+      <a onClick={() => onTileClick()}>
         <div className={sharedClassName + " " + nullClass}>{tileDisplay}</div>
       </a>
     );
@@ -170,18 +171,15 @@ const ShowTile = ({
   }
 };
 
+
 const ShowBoard = ({
-  board,
-  setBoard,
-  bIsNext,
-  setBIsNext,
+  game,
+  setGame,
   influence,
   userSettings,
 }: {
-  board: string[][];
-  setBoard: Function;
-  bIsNext: boolean;
-  setBIsNext: Function;
+  game: Game;
+  setGame: Function;
   influence: number[][];
   userSettings: UserSettings;
 }) => {
@@ -189,19 +187,17 @@ const ShowBoard = ({
 
   return (
     <>
-      {board.map((rowArray, rowIndex) => {
+      {game.board.map((rowArray, rowIndex) => {
         return (
           <div className={sharedRowClassName}>
             {rowArray.map(
               // if have a  declared value and you don't intend to ever call it, give it an underscore
               (_cell, colIndex) => (
                 <ShowTile
+                  game={game}
+                  setGame={setGame}
                   rowNum={rowIndex}
                   colNum={colIndex}
-                  board={board}
-                  setBoard={setBoard}
-                  bIsNext={bIsNext}
-                  setBIsNext={setBIsNext}
                   influence={influence}
                   userSettings={userSettings}
                 />
@@ -216,51 +212,25 @@ const ShowBoard = ({
 
 const buttonStyling = "p-5";
 
-const PassButton = ({
-  bIsNext,
-  setBIsNext,
-  passCount,
-  setPassCount,
-}: {
-  bIsNext: boolean;
-  setBIsNext: Function;
-  passCount: number;
-  setPassCount: Function;
-}) => {
-  const onPass = () => {
-    setPassCount(passCount + 1);
-    setBIsNext(!bIsNext);
-  };
+
+const refreshBoard = ( game: Game, setGame: Function, userSettings: UserSettings ) => {
+  const newBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
+  setGame({...game, gameBoard: newBoard, bIsNext: true, passCount: 0 })
+}
+
+const voluntaryPass = ( game: Game, setGame: Function ) => {
+  setGame({...game, bIsNext: !game.bIsNext, passCount: game.passCount+1})
+}
+
+
+const ActionButton = ({ text, action } : { text: string, action : Function } ) => {
   return (
     <div className={buttonStyling}>
-      <button onClick={() => onPass()}>Pass</button>
+      <button onClick={() => action()}>{text}</button>
     </div>
   );
 };
 
-const RefreshButton = ({
-  setBoard,
-  setBIsNext,
-  setPassCount,
-  boardSize,
-}: {
-  setBoard: Function;
-  setBIsNext: Function;
-  setPassCount: Function;
-  boardSize: number
-}) => {
-  const refreshBoard = () => {
-    setBoard(textBoardGenerator(boardSize, emptyLetter));
-    setBIsNext(true);
-    setPassCount(0);
-  };
-
-  return (
-    <div className={buttonStyling}>
-      <button onClick={() => refreshBoard()}>Start again</button>
-    </div>
-  );
-};
 
 const ShowScore = ({gameScore} : {gameScore: GameScore}) => {
   return(
@@ -313,74 +283,49 @@ function App() {
     singlePlayer: true
   });
  
+  const [soloGame, setSoloGame] = useState<Game>(structuredClone(exampleGame))
+
+  console.log("passCount on reload:", soloGame.passCount)
+  console.log("moveCount on reload:", soloGame.moveCount)
+
   useEffect(()=> {
-    setBoard(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter))
-    setBIsNext(true);
+    const freshBoard = textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)
+    setSoloGame({...soloGame, board: freshBoard, bIsNext: true})
+
   },[userSettings.boardSize])
 
-  const [board, setBoard] = useState(structuredClone(textBoardGenerator(boardLengthDict[userSettings.boardSize], emptyLetter)));
-  const [bIsNext, setBIsNext] = useState(true);
-  const [passCount, setPassCount] = useState(0);
-  const [gameScore, setGameScore] = useState<GameScore>({
-    blackStonesLostToWhite: 0,
-    whiteStonesLostToBlack: 0
-  })
 
-  // We don't need to run our heavy algos if a user has just passed
-  if (passCount === 0) {
-    // We run this once where we treat the player who just moved as "Safe"
-    const freshLibertyBoard = assessLibertyAcrossBoard({
-      gameBoard: board,
-      libertyBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
-      focusOnBlack: bIsNext,
-    });
-    const freshGameBoard = removeCapturedStones({
-      gameBoard: board,
-      libertyBoard: freshLibertyBoard,
-      gameScore: gameScore,
-      setGameScore: setGameScore,
-    });
 
-    // Then we run it again to assess for suicides
-    const freshLibertyBoard2 = assessLibertyAcrossBoard({
-      gameBoard: freshGameBoard,
-      libertyBoard: textBoardGenerator(boardLengthDict[userSettings.boardSize], ""),
-      focusOnBlack: !bIsNext,
-    });
-    const freshGameBoard2 = removeCapturedStones({
-      gameBoard: freshGameBoard,
-      libertyBoard: freshLibertyBoard2,
-      gameScore: gameScore,
-      setGameScore: setGameScore,
-    });
+  useEffect(()=> {
+    console.log("Change in moveCount detected, triggering removeCapturedStones sequence")
+    console.log("BOARD:", soloGame.board)
+    const updatedGame = removeCapturedStones(soloGame)
+    setSoloGame(updatedGame)
+    },[soloGame.moveCount])
 
-    if (JSON.stringify(board) != JSON.stringify(freshGameBoard2)) {
-      console.log("Stone(s) have been captured.");
-      setBoard(freshGameBoard2);
-    }
-  }
+
   
-  let currentWinState = checkWinCondition(board);
+  // let currentWinState = checkWinCondition(game);
 
-  if (passCount > 1) {
-    currentWinState = {
-      // dummy date for now
-      outcome: "WIN",
-      winner: blackString,
-    };
-  }
+  // if (passCount > 1) {
+  //   currentWinState = {
+  //     // dummy date for now
+  //     outcome: "WIN",
+  //     winner: blackString,
+  //   };
+  // }
 
   // size of influence board in this function is pegged to the version of board in State
   // because State sometimes lags slightly behind
   const influence = assessInfluenceAcrossBoard({
-    gameBoard: board,
-    influenceBoard: numberBoardGenerator(board.length, 0),
+    gameBoard: soloGame.board,
+    influenceBoard: numberBoardGenerator(soloGame.board.length, 0),
     recursionCount: 0,
   });
 
   return (
     <>
-      <NextPlayerMessage bIsNext={bIsNext} />
+      <NextPlayerMessage bIsNext={soloGame.bIsNext} />
 
       <ShowInfluenceToggle 
         userSettings={userSettings}
@@ -388,23 +333,20 @@ function App() {
       />
       <br />
 
-      <ShowScore gameScore={gameScore}/>
+      <ShowScore gameScore={soloGame.gameScore}/>
 
       <ShowBoard
-        board={board}
-        setBoard={setBoard}
-        bIsNext={bIsNext}
-        setBIsNext={setBIsNext}
+        game={soloGame}
+        setGame={setSoloGame}
         influence={influence}
         userSettings={userSettings}
       />
 
-      <PassButton
-        bIsNext={bIsNext}
-        setBIsNext={setBIsNext}
-        passCount={passCount}
-        setPassCount={setPassCount}
+      <ActionButton
+        text="Pass"
+        action={()=>voluntaryPass(soloGame, setSoloGame)}
       />
+
       <SizeDropdown
         userSettings={userSettings}
         setUserSettings={setUserSettings}
@@ -412,16 +354,11 @@ function App() {
         settingOptions={["Small", "Medium", "Large"]}
       />
 
-      <RefreshButton
-        setBoard={setBoard}
-        setBIsNext={setBIsNext}
-        setPassCount={setPassCount}
-        boardSize={boardLengthDict[userSettings.boardSize]}
-      />
+      <ActionButton text= "Start again" action={() => refreshBoard(soloGame, setSoloGame, userSettings)} />
 
       <ShowResults
-        outcome={currentWinState.outcome}
-        winner={currentWinState.winner}
+        outcome={soloGame.winState.outcome}
+        winner={soloGame.winState.winner}
       />
 
     </>
@@ -433,8 +370,10 @@ export default App;
 //
 // COMING UP NEXT
 //
-// Reusable DropDown
-// Add Multiplayer option to UserSettings
+// DONE Get rid of setBoard etc
+// DONE pull setGame out of the Updater.ts functions
+// DONE Reusable DropDown
+// DONE Add Multiplayer option to UserSettings
 // Start passing Game object that includes board, rather than smaller object
 // Enable user to enter a 
 // Fix the Influence algorithm so that it's rotationally balanced (assessments need to be made off older version of influence board)

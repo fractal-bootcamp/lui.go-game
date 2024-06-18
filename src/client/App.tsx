@@ -184,7 +184,7 @@ const ShowTile = ({
       }
       return {
         tokenClass: whiteTextClass,
-        letter: whiteTextClass,
+        letter: whiteLetter,
       };
     })();
     return (

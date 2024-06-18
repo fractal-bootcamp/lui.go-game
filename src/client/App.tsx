@@ -107,38 +107,25 @@ const ShowStone = ({
   colourLetter,
   rowNum,
   colNum,
-  isEmpty = false,
 }: {
   colourLetter: string;
   rowNum: number;
   colNum: number;
-  isEmpty?: boolean;
 }) => {
   const className =
     colourLetter === blackLetter ? blackStoneClass : whiteStoneClass;
 
-  const selfStoneAnimation = isEmpty
-    ? {
-        initial: { x: 100, y: 300, opacity: 1 },
-        animate: { x: 200, y: 600, opacity: 1 },
-        exit: { x: -100, y: -300, opacity: 1 },
-      }
-    : {
-        initial: { x: 100, y: 300, opacity: 0 },
-        animate: { x: 0, y: 0, opacity: 1 },
-        exit: { x: -100, y: -300, opacity: 0 },
-      };
-  const opponentStoneAnimation = isEmpty
-    ? {
-        initial: { x: -100, y: -300, opacity: 0 },
-        animate: { x: -200, y: -600, opacity: 1 },
-        exit: { x: 100, y: 300, opacity: 0 },
-      }
-    : {
-        initial: { x: -100, y: -300, opacity: 0 },
-        animate: { x: 0, y: 0, opacity: 1 },
-        exit: { x: 100, y: 300, opacity: 0 },
-      };
+  const selfStoneAnimation = {
+    initial: { x: 100, y: 300, opacity: 0 },
+    animate: { x: 0, y: 0, opacity: 1 },
+    exit: { x: -100, y: -300, opacity: 0 },
+  };
+
+  const opponentStoneAnimation = {
+    initial: { x: -100, y: -300, opacity: 0 },
+    animate: { x: 0, y: 0, opacity: 1 },
+    exit: { x: 100, y: 300, opacity: 0 },
+  };
 
   const stoneAnimation =
     colourLetter === blackLetter ? selfStoneAnimation : opponentStoneAnimation;
@@ -216,12 +203,6 @@ const ShowTile = ({
           whileTap={{ rotate: -rotationNumber, scale: 0.85 }}
         >
           {tileDisplay}
-          <ShowStone
-            colourLetter={blackLetter}
-            rowNum={rowNum}
-            colNum={colNum}
-            isEmpty={true}
-          />
         </motion.div>
       </a>
     );

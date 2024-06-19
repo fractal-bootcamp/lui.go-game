@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 
-import { SettingDropdown } from "./SettingDropdown"
+import { SettingDropdown } from "./SettingDropdown";
 
-import { assessInfluence } from "../shared/BoardAssessors"
+import { assessInfluence } from "../shared/BoardAssessors";
 
-import {
- useBoardController
-} from "../shared/useBoardController"
+import { useBoardController } from "../shared/useBoardController";
 
-import {motion} from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion";
 
 import "./App.css";
-
 
 import {
   blackString,
@@ -22,8 +19,7 @@ import {
   UserSettings,
   Game,
   GameScore,
-} from "../shared/constants"
-
+} from "../shared/constants";
 
 //// STYLING USED IN NextPlayerMessage AND ShowTile ////
 
@@ -57,32 +53,36 @@ const NextPlayerMessage = ({ bIsNext }: { bIsNext: boolean }) => {
   );
 };
 
-const ShowInfluenceToggle = ({ userSettings, setUserSettings }: { userSettings: UserSettings, setUserSettings: Function}) => {
+const ShowInfluenceToggle = ({
+  userSettings,
+  setUserSettings,
+}: {
+  userSettings: UserSettings;
+  setUserSettings: Function;
+}) => {
   return (
     <label className="inline-flex items-center cursor-pointer">
-    <input
-      type="checkbox"
-      value={userSettings.showInfluence.toString()}
-      className="sr-only peer"
-      onChange={() =>
-        setUserSettings({
-          ...userSettings,
-          showInfluence: !userSettings.showInfluence,
-        })
-      }
-    />
-    <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-    <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-      Show influence
-    </span>
-  </label>
+      <input
+        type="checkbox"
+        value={userSettings.showInfluence.toString()}
+        className="sr-only peer"
+        onChange={() =>
+          setUserSettings({
+            ...userSettings,
+            showInfluence: !userSettings.showInfluence,
+          })
+        }
+      />
+      <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+      <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+        Show influence
+      </span>
+    </label>
   );
 };
 
-
 const fetchTileBgColor = (localInfluence: number) => {
-
-  let tileBGColor = ""
+  let tileBGColor = "";
 
   if (localInfluence === 0) {
     tileBGColor = emptyTileBG;
@@ -100,10 +100,51 @@ const fetchTileBgColor = (localInfluence: number) => {
     tileBGColor = blackTileWeakBG;
   }
 
-  return tileBGColor
-}
+  return tileBGColor;
+};
 
+const ShowStone = ({
+  colourLetter,
+  rowNum,
+  colNum,
+}: {
+  colourLetter: string;
+  rowNum: number;
+  colNum: number;
+}) => {
+  const className =
+    colourLetter === blackLetter ? blackStoneClass : whiteStoneClass;
 
+  const selfStoneAnimation = {
+    initial: { x: 100, y: 300, opacity: 0 },
+    animate: { x: 0, y: 0, opacity: 1 },
+    exit: { x: -100, y: -300, opacity: 0 },
+  };
+
+  const opponentStoneAnimation = {
+    initial: { x: -100, y: -300, opacity: 0 },
+    animate: { x: 0, y: 0, opacity: 1 },
+    exit: { x: 100, y: 300, opacity: 0 },
+  };
+
+  const stoneAnimation =
+    colourLetter === blackLetter ? selfStoneAnimation : opponentStoneAnimation;
+
+  return (
+    <>
+      <AnimatePresence>
+        <motion.div
+          className={className}
+          key={`${rowNum}-${colNum}`}
+          {...stoneAnimation}
+        >
+          &nbsp;
+          {/* {blackLetter} */}
+        </motion.div>
+      </AnimatePresence>
+    </>
+  );
+};
 
 const ShowTile = ({
   game,
@@ -120,49 +161,56 @@ const ShowTile = ({
   influence: number[][];
   userSettings: UserSettings;
 }) => {
-
   // We use the influence to choose the background color of the tile
   const localInfluence = influence[rowNum][colNum];
-  const showInfluence = userSettings.showInfluence
-  const tileBGColor = showInfluence ? fetchTileBgColor(localInfluence) : emptyTileBG
+  const showInfluence = userSettings.showInfluence;
+  const tileBGColor = showInfluence
+    ? fetchTileBgColor(localInfluence)
+    : emptyTileBG;
   const sharedClassName = `flex flex-col w-10 h-10 rounded-sm m-1 p-2 font-bold ${tileBGColor}`;
   const nullClass = "text-gray-500 cursor-pointer";
 
-  if (game.board[rowNum][colNum] === blackLetter) {
+  const tokenAtPosition = game.board[rowNum][colNum];
+
+  if ([blackLetter, whiteLetter].includes(tokenAtPosition)) {
+    // This is a lambda function. It returns a configuration
+    // and can be pulled out into its own function at some stage
+    const { tokenClass, letter } = (() => {
+      if (tokenAtPosition === blackLetter) {
+        return {
+          tokenClass: blackTextClass,
+          letter: blackLetter,
+        };
+      }
+      return {
+        tokenClass: whiteTextClass,
+        letter: whiteLetter,
+      };
+    })();
     return (
-      <div className={sharedClassName + " " + blackTextClass}>
-        <div className={blackStoneClass}>&nbsp;
-          {/* {blackLetter} */}
-          </div>
-      </div>
-    );
-  }
-  if (game.board[rowNum][colNum] === whiteLetter) {
-    return (
-      <div className={sharedClassName + " " + whiteTextClass}>
-        <div className={whiteStoneClass}>&nbsp;
-          {/* {whiteLetter} */}
-          </div>
+      <div className={sharedClassName + " " + tokenClass}>
+        <ShowStone colourLetter={letter} rowNum={rowNum} colNum={colNum} />
       </div>
     );
   } else if (game.board[rowNum][colNum] === emptyLetter) {
     const tileDisplay = showInfluence ? localInfluence : "";
-    const rotationNumber = ((rowNum+colNum)%2 === 1) ? -2 : 2
+    const rotationNumber = (rowNum + colNum) % 2 === 1 ? -2 : 2;
     return (
       <a onClick={() => playMove(game, rowNum, colNum)}>
-        <motion.div 
+        <motion.div
           className={sharedClassName + " " + nullClass}
-          whileHover = {{ rotate: rotationNumber, scale: 1.1 }}
-          whileTap = {{ rotate: -rotationNumber, scale: 0.85 }}
-        >{tileDisplay}</motion.div>
+          whileHover={{ rotate: rotationNumber, scale: 1.1 }}
+          whileTap={{ rotate: -rotationNumber, scale: 0.85 }}
+        >
+          {tileDisplay}
+        </motion.div>
       </a>
     );
   } else {
     console.log("ERROR: Tiles detected with irregular values.");
-    return <div></div>;
+    return <div />;
   }
 };
-
 
 const ShowBoard = ({
   game,
@@ -204,29 +252,29 @@ const ShowBoard = ({
 
 const buttonStyling = "p-5";
 
-
-const ActionButton = ({ text, action } : { text: string, action : Function } ) => {
+const ActionButton = ({ text, action }: { text: string; action: Function }) => {
   return (
     <div className={buttonStyling}>
-      <motion.button 
-      onClick={() => action()}
-      whileHover = {{  rotate: -5, scale: 1.1 }}
-      whileTap = {{ rotate: 5, scale: 0.90 }}
-      >{text}</motion.button>
+      <motion.button
+        onClick={() => action()}
+        whileHover={{ rotate: -5, scale: 1.1 }}
+        whileTap={{ rotate: 5, scale: 0.9 }}
+      >
+        {text}
+      </motion.button>
     </div>
   );
 };
 
-
-const ShowScore = ({gameScore} : {gameScore: GameScore}) => {
-  return(
+const ShowScore = ({ gameScore }: { gameScore: GameScore }) => {
+  return (
     <div>
       Black has captured: {gameScore.whiteStonesLostToBlack} stones
       <br />
       White has captured: {gameScore.blackStonesLostToWhite} stones
     </div>
-  )
-}
+  );
+};
 
 const ShowResults = ({
   outcome,
@@ -248,9 +296,6 @@ const ShowResults = ({
   } else return null;
 };
 
-
-
-
 function App() {
   console.log("==== APP REFRESH ====");
 
@@ -259,35 +304,34 @@ function App() {
     boardSize: "Small",
     playMode: "Solo",
     dropDownHidden: true,
-    singlePlayer: true
+    singlePlayer: true,
   });
- 
+
   // If you switch between solo and server play mode, we
   // want to use custom hooks to redefine our four core
   // game actions
 
-  const {activeGame, syncGame, playMove, resetGame, passMove} = useBoardController(userSettings.playMode)
+  const { activeGame, syncGame, playMove, resetGame, passMove } =
+    useBoardController(userSettings.playMode);
 
-   // If you have taken a move in local mode, we want to remove captured stones
-   useEffect(()=> {
-    
-    console.log("change detected")
-    },[activeGame, syncGame, playMove, resetGame, passMove])
-  
+  // If you have taken a move in local mode, we want to remove captured stones
+  useEffect(() => {
+    console.log("change detected");
+  }, [activeGame, syncGame, playMove, resetGame, passMove]);
 
   // Game               -> getGame          -> Game
   // Game, row, col     -> playMove         -> Game
   // Game               -> resetGame        -> Game
   // Game               -> passMove         -> Game
 
-
-  const [poller, setPoller] = useState<number>(0)
+  const [poller, setPoller] = useState<number>(0);
 
   useEffect(() => {
-    syncGame(activeGame)
-    setTimeout(() => {setPoller(poller+1)}, 800)
-  }, [poller]
-  )
+    syncGame(activeGame);
+    setTimeout(() => {
+      setPoller(poller + 1);
+    }, 800);
+  }, [poller]);
   // // REMOVING BOARD SIZE CHANGE TO SIMPLIFY MULTIPLAYER
   // // If you change the board size, we want a fresh board
   // useEffect(()=> {
@@ -295,11 +339,10 @@ function App() {
   //   setActiveGame({...activeGame, board: freshBoard, bIsNext: true})
   // },[userSettings.boardSize])
 
-
   // If you have taken a move in local mode, we want to remove captured stones
-  useEffect(()=> {
-    syncGame(activeGame)
-    },[activeGame.moveCount])
+  useEffect(() => {
+    syncGame(activeGame);
+  }, [activeGame.moveCount]);
 
   const influence = assessInfluence(activeGame);
 
@@ -307,26 +350,23 @@ function App() {
     <>
       <NextPlayerMessage bIsNext={activeGame.bIsNext} />
 
-      <ShowInfluenceToggle 
+      <ShowInfluenceToggle
         userSettings={userSettings}
         setUserSettings={setUserSettings}
       />
       <br />
 
-      <ShowScore gameScore={activeGame.gameScore}/>
+      <ShowScore gameScore={activeGame.gameScore} />
 
       <ShowBoard
         game={activeGame}
-        playMove = {playMove}
+        playMove={playMove}
         influence={influence}
         userSettings={userSettings}
         key={userSettings.playMode}
       />
 
-      <ActionButton
-        text="Pass"
-        action={()=>passMove(activeGame)}
-      />
+      <ActionButton text="Pass" action={() => passMove(activeGame)} />
 
       <SettingDropdown
         userSettings={userSettings}
@@ -345,13 +385,12 @@ function App() {
         settingOptions={["Small", "Medium", "Large"]}
       /> */}
 
-      <ActionButton text= "Start again" action={() => resetGame(activeGame)} />
+      <ActionButton text="Start again" action={() => resetGame(activeGame)} />
 
       <ShowResults
         outcome={activeGame.winState.outcome}
         winner={activeGame.winState.winner}
       />
-
     </>
   );
 }
